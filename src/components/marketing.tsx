@@ -4,6 +4,8 @@ import { Logo, Mark } from "@/components/brand/Logo";
 import { TradeIcon } from "@/components/TradeIcon";
 import { button } from "@/components/ui";
 import { LIVE_TRADES } from "@/lib/trades";
+import { CITIES } from "@/lib/seo/cities";
+import { GUIDES } from "@/lib/seo/guides";
 
 /* ───────────────────────── Buttons ───────────────────────── */
 
@@ -270,7 +272,7 @@ export function ClosingBand({ title, href = "/signup" }: { title: React.ReactNod
 export function SiteFooter() {
   return (
     <footer className="border-t border-line bg-white">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-3 lg:grid-cols-[1.3fr_1fr_1fr_1.3fr_1fr]">
         <div>
           <Logo height={22} />
           <p className="mt-4 max-w-[38ch] text-sm text-ink-2">
@@ -296,6 +298,25 @@ export function SiteFooter() {
             <li><Link href="/signup" className="hover:text-ink">Start free week</Link></li>
           </ul>
         </nav>
+        <nav aria-label="Resources">
+          <p className="text-sm font-medium">Resources</p>
+          <ul className="mt-3 space-y-2 text-sm text-ink-2">
+            {GUIDES.map((g) => (
+              <li key={g.slug}><Link href={`/guides/${g.slug}`} className="hover:text-ink">{g.title}</Link></li>
+            ))}
+            <li><Link href="/alternatives" className="hover:text-ink">Permit lead tools compared</Link></li>
+          </ul>
+        </nav>
+        {CITIES.length > 0 && (
+          <nav aria-label="Cities">
+            <p className="text-sm font-medium">Cities</p>
+            <ul className="mt-3 space-y-2 text-sm text-ink-2">
+              {CITIES.map((c) => (
+                <li key={c.slug}><Link href={`/pool-service/${c.slug}`} className="hover:text-ink">Pool permits in {c.name}, {c.state}</Link></li>
+              ))}
+            </ul>
+          </nav>
+        )}
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 text-xs text-ink-3 sm:px-6">

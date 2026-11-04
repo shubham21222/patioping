@@ -70,8 +70,8 @@ export const LIVE_TRADES: LiveTrade[] = [
     keywords: ["fence", "fencing", "privacy wall", "masonry wall", "screen wall", "garden wall"],
         pitch: {
       headline: "New fence permits in your area, every morning.",
-      body: "A fence permit means a homeowner is ready to spend, and new pools need a barrier by code. See the address and job value, plus the builder where the city publishes it, while the job is still fresh.",
-      why: "Pool permits bring barrier and gate work with them. You get those too.",
+      body: "A fence permit means a homeowner is ready to spend, and many local codes require a barrier around new pools. See the address and job value, plus the builder where the city publishes it, while the job is still fresh.",
+      why: "Many pool permits bring barrier and gate work with them. You see those too.",
     },
     examples: [
       { work: "Privacy fence, 180 ft", value: 9800, builder: "Owner-builder" },

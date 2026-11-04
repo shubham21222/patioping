@@ -12,11 +12,16 @@ const instrument = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "PatioPing · New backyard project alerts for contractors",
+  title: {
+    default: "PatioPing: new pool, fence and patio permit leads for contractors",
+    template: "%s | PatioPing",
+  },
+  applicationName: "PatioPing",
   description:
     "New pool, fence and patio permits in your zip codes, in your inbox at 7 AM, with a simple pipeline to turn them into customers.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://patioping.com"),
-  openGraph: { images: ["/brand/patioping-logo.png"] },
+  openGraph: { type: "website", siteName: "PatioPing", images: [{ url: "/og.png", width: 1200, height: 630 }] },
+  twitter: { card: "summary_large_image", images: ["/og.png"] },
 };
 
 export const viewport: Viewport = { themeColor: "#e2eef5" };

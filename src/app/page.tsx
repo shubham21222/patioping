@@ -24,7 +24,17 @@ import { PricingPicker } from "@/components/PricingPicker";
 import { SoonTrades } from "@/components/SoonTrades";
 import { TradeIcon } from "@/components/TradeIcon";
 import { ZipCheck } from "@/components/ZipCheck";
-import { FOUNDING } from "@/lib/plans";
+import { FOUNDING, PLANS } from "@/lib/plans";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE } from "@/lib/seo/cities";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: { absolute: "PatioPing: New Pool, Fence & Patio Permit Leads for Contractors" },
+  description:
+    "Daily 7 AM alerts for new pool, fence and patio permits in your zip codes, from public city and county records. Address, job value and builder where published. 7 days free.",
+  alternates: { canonical: "/" },
+};
 
 // Illustrative only: every sample is labeled as such where it renders.
 const sample: AlertItem[] = [
@@ -57,6 +67,31 @@ const faqs = [
 export default function Home() {
   return (
     <main className="bg-bg">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "PatioPing",
+            url: SITE,
+            logo: `${SITE}/brand/patioping-logo.png`,
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            name: "PatioPing",
+            applicationCategory: "BusinessApplication",
+            operatingSystem: "Web",
+            description: "Daily alerts for new pool, fence and patio building permits, with a lead pipeline for contractors.",
+            offers: PLANS.map((p) => ({ "@type": "Offer", name: p.name, price: p.price, priceCurrency: "USD", url: `${SITE}/#pricing` })),
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          },
+        ]}
+      />
       {/* ───── Hero ───── */}
       <section className="relative overflow-hidden">
         <div aria-hidden="true" className="absolute inset-0 bg-[url(/art/hills-hero.webp)] bg-cover bg-[center_top]" />

@@ -46,6 +46,35 @@ export const SOURCES: SourceConfig[] = [
     verified: false,
   },
   {
+    key: "orlando",
+    name: "Orlando",
+    state: "FL",
+    country: "US",
+    timezone: "America/New_York",
+    source_type: "socrata",
+    endpoint: "https://data.cityoforlando.net",
+    dataset_id: "ryhf-m453", // Permit Applications
+    portal: "https://data.cityoforlando.net/d/ryhf-m453",
+    // Column names taken from a live query of this dataset (Nov 2026).
+    // Owner names and contractor phone numbers are published but deliberately not mapped.
+    field_mapping: {
+      permit_number: "permit_number",
+      issued_at: "issue_permit_date",
+      permit_type: ["application_type", "worktype"],
+      description: "project_name",
+      valuation: "estimated_cost",
+      address: "permit_address",
+      // No zip column. Leads match on zip, so Orlando needs zip enrichment from
+      // geocoded_column before it can create leads; dry-run counts work without it.
+      lat: "geocoded_column.coordinates.1",
+      lng: "geocoded_column.coordinates.0",
+      contractor_name: "contractor",
+      _query: { date_field: "issue_permit_date", where: "plan_review_type like 'Residential%'" },
+    },
+    coverage_note: "City of Orlando only (not unincorporated Orange County)",
+    verified: false,
+  },
+  {
     key: "scottsdale",
     name: "Scottsdale",
     state: "AZ",

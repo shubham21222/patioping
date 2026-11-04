@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { ClosingBand, CtaButton, GhostButton, SampleAlert, SiteHeader, TradeCards, type AlertItem } from "@/components/marketing";
 import { TradeIcon } from "@/components/TradeIcon";
 import { LIVE_TRADES, tradeBySlug } from "@/lib/trades";
+import { CITIES } from "@/lib/seo/cities";
 
 export const dynamicParams = false;
 
@@ -103,6 +104,22 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pt-24 sm:px-6">
+        {CITIES.length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-medium sm:text-4xl">
+              {t.name} permits by <span className="accent">city</span>
+            </h2>
+            <ul className="mt-6 flex flex-wrap gap-2">
+              {CITIES.map((c) => (
+                <li key={c.slug}>
+                  <Link href={`/${t.slug}/${c.slug}`} className="inline-block rounded-full border border-line bg-white px-4 py-2 text-sm hover:border-line-2">
+                    New {t.short} permits in {c.name}, {c.state}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <h2 className="text-3xl font-medium sm:text-4xl">
           Other <span className="accent">trades</span> on PatioPing
         </h2>
