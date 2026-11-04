@@ -1,6 +1,6 @@
 # PatioPing
 
-New pool & backyard permit alerts for contractors. Full product plan: [`docs/PLAN.md`](docs/PLAN.md).
+New backyard project permit alerts (pools, fences, patios) for contractors. Full product plan: [`docs/PLAN.md`](docs/PLAN.md).
 
 **Stack:** Next.js 15 (App Router) · Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare) · Supabase (Auth + Postgres) · Whop (payments) · Tailwind CSS v4
 
@@ -16,11 +16,13 @@ src/
     auth/signout          POST → sign out
     (app)/                Signed-in app (shared shell)
       leads/              Leads inbox, lead detail, CSV export
-      onboarding/         Trade, zip codes, alert time
+      onboarding/         Trade (+ waitlist), zip codes, alert time
       settings/billing/   Plans + Whop checkout
+    (marketing)/[trade]   SEO pages: /pool-service, /fence, /landscaping
     api/webhooks/whop     Whop membership webhook → orgs.plan
   lib/supabase/           Browser, server, middleware and service-role clients
   lib/whop.ts             Checkout configuration + webhook verification
+  lib/trades.ts           Live + coming-soon trades, classifier keywords
   components/brand/       Logo, mark, waterline band
 public/brand/             Logo files (SVG + PNG)
   middleware.ts           Session refresh + route protection
@@ -49,7 +51,7 @@ On signup, a database trigger automatically creates an `orgs` row and an owner `
 1. In the Whop dashboard create a product with three monthly plans: Starter $49, Growth $149, Pro $299. Copy each `plan_…` id into `WHOP_PLAN_STARTER/GROWTH/PRO`.
 2. Create an API key → `WHOP_API_KEY`.
 3. Developer → Webhooks → Create webhook, API version **v1**, URL `https://patioping.com/api/webhooks/whop`, events `membership.activated`, `membership.deactivated`, `membership.updated`. Copy the `ws_…` secret → `WHOP_WEBHOOK_SECRET`.
-4. Run the second migration (`supabase/migrations/20261104010000_whop_billing.sql`).
+4. Run all migrations in `supabase/migrations/` in order.
 
 Checkout passes `org_id` and `plan` as metadata; the webhook reads them back and updates `orgs.plan` / `plan_status`. Users can't write billing columns themselves.
 
@@ -87,4 +89,4 @@ Custom domain: Cloudflare dashboard → Workers → patioping → Settings → D
 
 ## Design
 
-Direction "Waterline": deep pool water for the hero, a mosaic waterline band, pale concrete deck for working screens, depth-marker numerals (Archivo, semi-condensed) for counts and prices. Sun yellow marks high-value leads only. Light theme because pool techs use it on a phone in full sun.
+Direction "Waterline": deep pool water for the hero, a mosaic waterline band, pale concrete deck for working screens, depth-marker numerals (Archivo, semi-condensed) for counts and prices. Sun yellow marks high-value leads only. Light theme because crews use it on a phone in full sun.

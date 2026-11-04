@@ -2,8 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/session";
-
-const TRADES = ["pool_service", "fence", "landscaping", "enclosure", "solar"];
+import { isLiveTrade } from "@/lib/trades";
 const ZONES = ["America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles"];
 
 export async function saveTerritory(formData: FormData) {
@@ -20,7 +19,7 @@ export async function saveTerritory(formData: FormData) {
   const { error: orgErr } = await supabase
     .from("orgs")
     .update({
-      trade: TRADES.includes(trade) ? trade : "pool_service",
+      trade: isLiveTrade(trade) ? trade : "pool_service",
       alert_hour_local: Number.isInteger(hour) && hour >= 4 && hour <= 11 ? hour : 7,
       timezone: ZONES.includes(tz) ? tz : "America/Chicago",
     })

@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { SubmitButton } from "@/components/SubmitButton";
 import { input, label } from "@/components/ui";
 import { getSession } from "@/lib/session";
+import { tradeById } from "@/lib/trades";
 import { addNote, updateLead } from "./actions";
 
 const STAGES = [
@@ -26,11 +27,12 @@ const stageChange = (body: string | null) =>
 
 export default async function LeadPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { supabase } = await getSession(`/leads/${id}`);
+  const { supabase, org } = await getSession(`/leads/${id}`);
+  const monthly = (tradeById(org?.trade ?? "")?.wonValue ?? "monthly") === "monthly";
 
   const { data: lead } = await supabase
     .from("leads")
-    .select("id, stage, next_follow_up, won_value_monthly, permits(*), lead_activities(id, type, body, created_at)")
+    .select("id, stage, next_follow_up, won_value_monthly, won_value_job, permits(*), lead_activities(id, type, body, created_at)")
     .eq("id", id)
     .order("created_at", { referencedTable: "lead_activities", ascending: false })
     .maybeSingle();
@@ -117,13 +119,14 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
             <input id="fu" type="date" name="next_follow_up" defaultValue={lead.next_follow_up ?? ""} className={input} />
           </div>
           <div>
-            <label htmlFor="won" className={label}>Monthly price if won</label>
+            <label htmlFor="won" className={label}>{monthly ? "Monthly price if won" : "Job value if won"}</label>
+            <input type="hidden" name="won_kind" value={monthly ? "monthly" : "job"} />
             <input
               id="won"
-              name="won_value_monthly"
+              name="won_value"
               inputMode="decimal"
-              placeholder="150"
-              defaultValue={lead.won_value_monthly ?? ""}
+              placeholder={monthly ? "150" : "9800"}
+              defaultValue={(monthly ? lead.won_value_monthly : lead.won_value_job) ?? ""}
               className={input}
               aria-describedby="won-hint"
             />

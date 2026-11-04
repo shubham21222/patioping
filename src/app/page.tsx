@@ -1,16 +1,18 @@
 import Link from "next/link";
-import { ArrowRight, Check, MailOpen } from "lucide-react";
-import { Logo } from "@/components/brand/Logo";
+import { ArrowRight, Check } from "lucide-react";
 import { DepthMarker, Waterline } from "@/components/brand/Waterline";
+import { ClosingBand, LiveTradeList, SampleAlert, SiteHeader, type AlertItem } from "@/components/marketing";
+import { SoonTrades } from "@/components/SoonTrades";
 import { button } from "@/components/ui";
 import { PLANS } from "@/lib/plans";
 
 // Illustrative only: shown inside a frame labeled "Sample alert".
-const sample = [
+const sample: AlertItem[] = [
   { addr: "4812 Ridgeview Dr", zip: "78745", work: "Pool + spa", value: 92000, builder: "Hill Country Pools", high: true },
-  { addr: "1907 Barton Hills Dr", zip: "78704", work: "Pool", value: 78500, builder: "Blue Haven Pools", high: true },
-  { addr: "6203 Shadow Valley", zip: "78731", work: "Pool", value: 54000, builder: "Reeds Pools", high: false },
-  { addr: "311 Pecan Grove Rd", zip: "78745", work: "Spa", value: 18200, builder: "Owner-builder", high: false },
+  { addr: "1907 Barton Hills Dr", zip: "78704", work: "Covered patio + outdoor kitchen", value: 48000, builder: "Texas Outdoor Living" },
+  { addr: "6203 Shadow Valley", zip: "78731", work: "Privacy fence, 180 ft", value: 9800, builder: "Owner-builder" },
+  { addr: "311 Pecan Grove Rd", zip: "78745", work: "Pergola + pavers", value: 16400, builder: "Cedar & Stone" },
+  { addr: "88 Lost Creek Blvd", zip: "78746", work: "Pool", value: 78500, builder: "Blue Haven Pools", high: true },
 ];
 
 const stages = ["New", "Contacted", "Postcard sent", "Quoted", "Won"];
@@ -18,7 +20,7 @@ const stages = ["New", "Contacted", "Postcard sent", "Quoted", "Won"];
 const faqs = [
   {
     q: "Where does the data come from?",
-    a: "Public building-permit records that cities and counties publish on their open-data portals. We read them overnight, keep the pool and spa permits, and match them to your zip codes.",
+    a: "Public building-permit records that cities and counties publish on their open-data portals. We read them overnight, keep the pool, fence and outdoor-living permits, and match them to your trade and zip codes.",
   },
   {
     q: "Is it legal to use permit data?",
@@ -39,27 +41,16 @@ export default function Home() {
     <main>
       {/* ───── Water ───── */}
       <section className="bg-deep text-white">
-        <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-          <Logo tone="reverse" animate />
-          <nav className="flex items-center gap-1 sm:gap-2">
-            <span className="hidden sm:contents">
-              <a href="#pricing" className={button("ghostOnDeep")}>Pricing</a>
-            </span>
-            <Link href="/login" className={button("ghostOnDeep")}>Log in</Link>
-            <Link href="/signup" className={button("onDeep")}>
-              Start free<span className="hidden sm:inline">&nbsp;week</span>
-            </Link>
-          </nav>
-        </header>
+        <SiteHeader />
 
         <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:pb-24 lg:pt-16">
           <div>
             <h1 className="text-[2.6rem] font-extrabold leading-[1.02] [font-stretch:87.5%] sm:text-6xl lg:text-[4.25rem]">
-              Every new pool in your zip codes, the morning it&rsquo;s permitted.
+              New backyard project alerts: pools, fences, patios and more.
             </h1>
             <p className="mt-6 max-w-[52ch] text-lg text-on-deep-2">
-              By the time a pool is permitted, the homeowner has picked a builder. They haven&rsquo;t picked who cleans it.
-              PatioPing reads city and county permit records overnight and puts those addresses in your inbox before your first stop.
+              PatioPing reads city and county permit records overnight and emails you the new backyard projects in your zip codes
+              at 7 AM. Address, job value and builder, before anyone else calls.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link href="/signup" className={button("onDeep", "lg")}>
@@ -69,7 +60,7 @@ export default function Home() {
             </div>
           </div>
 
-          <SampleAlert />
+          <SampleAlert subject="5 new backyard projects in your area" items={sample} />
         </div>
       </section>
 
@@ -83,6 +74,25 @@ export default function Home() {
         </div>
       </div>
 
+      {/* ───── Trades ───── */}
+      <section id="trades" className="mx-auto max-w-6xl scroll-mt-8 px-4 pt-24 sm:px-6">
+        <h2 className="text-3xl font-extrabold leading-tight [font-stretch:87.5%] sm:text-[2.6rem]">Pick your trade</h2>
+        <p className="mt-3 max-w-[60ch] text-lg text-ink-2">
+          Each trade gets its own permit filter, so a fence crew never wades through pool permits.
+        </p>
+        <div className="mt-10">
+          <LiveTradeList />
+        </div>
+
+        <h3 className="mt-14 text-xl font-bold">Coming soon</h3>
+        <p className="mt-1 max-w-[60ch] text-ink-2">
+          Tell us what you&rsquo;d use. We build the trade with the most requests next.
+        </p>
+        <div className="mt-5">
+          <SoonTrades source="landing" />
+        </div>
+      </section>
+
       {/* ───── Pipeline ───── */}
       <section className="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 lg:grid-cols-[1fr_1.5fr] lg:items-center">
         <div>
@@ -90,8 +100,8 @@ export default function Home() {
             From permit to a stop on your route
           </h2>
           <p className="mt-5 max-w-[50ch] text-lg text-ink-2">
-            Most pool companies track leads in a notebook or a group text. Every lead in PatioPing comes with a simple pipeline:
-            mark it contacted from the truck, set a follow-up, and log the monthly price when you win it.
+            Most contractors track leads in a notebook or a group text. Every lead in PatioPing comes with a simple pipeline:
+            mark it contacted from the truck, set a follow-up, and log what the job is worth when you win it.
           </p>
           <ul className="mt-7 space-y-3 text-ink">
             {["Notes and follow-up reminders on every address", "One-click postcards to the homeowner", "Export to CSV whenever you want"].map((t) => (
@@ -110,9 +120,9 @@ export default function Home() {
       <section className="bg-deck">
         <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
           <h2 className="max-w-[18ch] text-4xl font-extrabold leading-[1.05] [font-stretch:87.5%] sm:text-6xl">
-            One new account pays for the year.
+            One new customer pays for the year.
           </h2>
-          <dl className="mt-12 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2">
+          <dl className="mt-12 grid max-w-5xl gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
             <div className="bg-white p-6 sm:p-8">
               <dt className="text-sm font-semibold text-ink-2">PatioPing Starter, 12 months</dt>
               <dd className="marker mt-3 text-5xl text-ink">$588</dd>
@@ -123,9 +133,14 @@ export default function Home() {
               <dd className="marker mt-3 text-5xl text-water">$1,800</dd>
               <dd className="num mt-2 text-sm text-ink-3">$150 × 12, every year they stay</dd>
             </div>
+            <div className="bg-white p-6 sm:p-8">
+              <dt className="text-sm font-semibold text-ink-2">One 180 ft privacy fence</dt>
+              <dd className="marker mt-3 text-5xl text-water">$9,800</dd>
+              <dd className="num mt-2 text-sm text-ink-3">From the sample alert above</dd>
+            </div>
           </dl>
           <p className="mt-6 max-w-[60ch] text-sm text-ink-3">
-            Plug in your own monthly price. The math is the same.
+            Use your own prices. Examples are illustrative.
           </p>
         </div>
       </section>
@@ -186,63 +201,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── Close ───── */}
-      <Waterline />
-      <section className="bg-deep text-white">
-        <div className="mx-auto flex max-w-6xl flex-col items-start gap-8 px-4 py-20 sm:px-6 lg:flex-row lg:items-end lg:justify-between">
-          <h2 className="max-w-[20ch] text-4xl font-extrabold leading-[1.05] [font-stretch:87.5%] sm:text-5xl">
-            Tomorrow at 7 AM, see who&rsquo;s putting in a pool.
-          </h2>
-          <Link href="/signup" className={button("onDeep", "lg")}>
-            Start your free week <ArrowRight size={18} strokeWidth={2.25} />
-          </Link>
-        </div>
-        <footer className="border-t border-white/10">
-          <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-on-deep-2 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <Logo tone="reverse" height={22} />
-            <p>© {new Date().getFullYear()} PatioPing. Built on public permit records.</p>
-          </div>
-        </footer>
-      </section>
+      <ClosingBand headline="Tomorrow at 7 AM, see who’s building in your area." />
     </main>
-  );
-}
-
-function SampleAlert() {
-  return (
-    <figure className="overflow-hidden rounded-2xl bg-white text-ink shadow-[0_24px_60px_-20px_rgba(3,20,40,0.55)]">
-      <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-        <MailOpen size={18} className="text-ink-3" />
-        <div className="min-w-0">
-          <p className="truncate font-semibold">4 new pools in your area today</p>
-          <p className="text-sm text-ink-3">PatioPing · 7:00 AM</p>
-        </div>
-      </div>
-      <div className="px-5 py-4">
-        <p className="text-sm text-ink-2">
-          <span className="font-semibold text-ink">2 high value</span> · 78704, 78731, 78745
-        </p>
-        <ol className="mt-3 divide-y divide-line">
-          {sample.map((l) => (
-            <li key={l.addr} className="flex items-start justify-between gap-4 py-3">
-              <div className="min-w-0">
-                <p className="flex items-center gap-2 font-semibold">
-                  {l.high && <span className="h-2 w-2 shrink-0 rounded-full bg-sun" aria-label="High value" />}
-                  <span className="truncate">{l.addr}</span>
-                </p>
-                <p className="truncate text-sm text-ink-2">
-                  {l.work} · {l.builder} · {l.zip}
-                </p>
-              </div>
-              <p className="num shrink-0 font-semibold">${l.value.toLocaleString("en-US")}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-      <figcaption className="border-t border-line bg-deck px-5 py-2.5 text-xs text-ink-3">
-        Sample alert. Addresses are illustrative.
-      </figcaption>
-    </figure>
   );
 }
 
@@ -258,11 +218,11 @@ function PipelinePreview() {
             </p>
             <div className="space-y-2">
               {i === 0 && <MiniCard addr="4812 Ridgeview" meta="Pool + spa" high />}
-              {i === 0 && <MiniCard addr="311 Pecan Grove" meta="Spa" />}
+              {i === 0 && <MiniCard addr="311 Pecan Grove" meta="Pergola" />}
               {i === 1 && <MiniCard addr="1907 Barton Hills" meta="Follow up Thu" />}
               {i === 2 && <MiniCard addr="6203 Shadow Valley" meta="Mailed Mon" />}
-              {i === 3 && <MiniCard addr="88 Lost Creek" meta="$165/mo quote" />}
-              {i === 4 && <MiniCard addr="2210 Oak Bend" meta="$150/mo" won />}
+              {i === 3 && <MiniCard addr="88 Lost Creek" meta="Fence, $9.8k quote" />}
+              {i === 4 && <MiniCard addr="2210 Oak Bend" meta="Pool, $150/mo" won />}
             </div>
           </div>
         ))}

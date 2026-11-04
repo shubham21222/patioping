@@ -1,15 +1,11 @@
 import { Notice } from "@/components/AuthCard";
+import { SoonTrades } from "@/components/SoonTrades";
 import { SubmitButton } from "@/components/SubmitButton";
+import { TradeIcon } from "@/components/TradeIcon";
 import { input, label } from "@/components/ui";
 import { getSession } from "@/lib/session";
+import { LIVE_TRADES } from "@/lib/trades";
 import { saveTerritory } from "./actions";
-
-const TRADES = [
-  { id: "pool_service", name: "Pool service", note: "New pools and spas", live: true },
-  { id: "fence", name: "Fencing", note: "Coming later", live: false },
-  { id: "landscaping", name: "Landscaping", note: "Coming later", live: false },
-  { id: "enclosure", name: "Screen enclosures", note: "Coming later", live: false },
-];
 
 const ZONES = [
   ["America/Chicago", "Central (Austin, Nashville)"],
@@ -19,50 +15,59 @@ const ZONES = [
   ["America/Denver", "Mountain"],
 ];
 
+const FORM_ID = "territory-form";
+
 export default async function OnboardingPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const { error } = await searchParams;
-  const { supabase, org } = await getSession("/onboarding");
+  const { supabase, org, user } = await getSession("/onboarding");
   const { data: territory } = await supabase.from("territories").select("zips").eq("type", "zip").maybeSingle();
+  const current = org?.trade ?? "pool_service";
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-3xl">
       <h1 className="text-3xl font-extrabold [font-stretch:87.5%] sm:text-4xl">Your territory</h1>
       <p className="mt-2 text-ink-2">Three answers and your first alert goes out tomorrow morning.</p>
 
       {error && <div className="mt-6"><Notice tone="error">{error}</Notice></div>}
 
-      <form action={saveTerritory} className="mt-10 space-y-12">
-        <fieldset>
-          <legend className="text-lg font-bold">What do you do?</legend>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {TRADES.map((t) => (
-              <label
-                key={t.id}
-                className={`flex items-start gap-3 rounded-[12px] border p-4 transition-colors ${
-                  t.live
-                    ? "cursor-pointer border-line hover:border-ink-3 has-[:checked]:border-water has-[:checked]:bg-[#eef6fc]"
-                    : "cursor-not-allowed border-line bg-deck text-ink-3"
-                }`}
-              >
+      {/* Lives outside the <form> so the waitlist form below isn't nested; radios join via form=. */}
+      <fieldset className="mt-10">
+        <legend className="text-lg font-bold">Pick your trade</legend>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          {LIVE_TRADES.map((t) => (
+            <label
+              key={t.id}
+              className="flex cursor-pointer flex-col gap-3 rounded-[12px] border border-line p-4 transition-colors hover:border-ink-3 has-[:checked]:border-water has-[:checked]:bg-[#eef6fc] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-water"
+            >
+              <span className="flex items-center justify-between">
+                <TradeIcon name={t.icon} size={24} className="text-water" />
                 <input
                   type="radio"
                   name="trade"
                   value={t.id}
-                  disabled={!t.live}
-                  defaultChecked={(org?.trade ?? "pool_service") === t.id}
-                  className="mt-1 accent-[var(--water)]"
+                  form={FORM_ID}
+                  required
+                  defaultChecked={current === t.id}
+                  className="h-4 w-4 accent-[var(--water)]"
                 />
-                <span>
-                  <span className={`block font-semibold ${t.live ? "text-ink" : ""}`}>{t.name}</span>
-                  <span className="text-sm">{t.note}</span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
+              </span>
+              <span>
+                <span className="block font-semibold">{t.name}</span>
+                <span className="text-sm text-ink-2">{t.keywords.slice(0, 3).join(", ")}</span>
+              </span>
+            </label>
+          ))}
+        </div>
 
+        <p className="mt-6 text-sm font-semibold text-ink-2">Not listed? Get notified when yours launches.</p>
+        <div className="mt-3">
+          <SoonTrades source="onboarding" defaultEmail={user.email ?? ""} columns="sm:grid-cols-2" />
+        </div>
+      </fieldset>
+
+      <form id={FORM_ID} action={saveTerritory} className="mt-12 space-y-12">
         <fieldset>
-          <legend className="text-lg font-bold">Which zip codes do you service?</legend>
+          <legend className="text-lg font-bold">Which zip codes do you work in?</legend>
           <label htmlFor="zips" className="sr-only">Zip codes</label>
           <textarea
             id="zips"

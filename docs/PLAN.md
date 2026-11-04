@@ -15,6 +15,27 @@
 - **Kyun ye log:** Permit nikalne tak homeowner apna pool *builder* chun chuka hota hai. Lekin pool *cleaning/maintenance* wala abhi tak nahi chuna hota. Har naya pool unke liye saalon ka recurring customer hai (lagbhag $150/month).
 - **Baad mein:** fence, landscaping, screen enclosure, outdoor lighting, solar (roof permits se).
 
+### Trades at launch
+Product sirf pools ke liye nahi hai. Config: `src/lib/trades.ts` (onboarding, landing, SEO pages aur classifier, sab yahi padhte hain).
+
+**✅ Live** (Tier 1 sources mein data aaram se milta hai):
+| Trade | Permit keywords (classifier pass 1) | Won value |
+|---|---|---|
+| Pool service | pool, spa, swimming, gunite, shotcrete, hot tub | monthly |
+| Fence | fence, fencing, privacy/masonry/screen/garden wall | per job |
+| Landscaping / outdoor | patio, deck, pergola, retaining wall, outdoor kitchen, gazebo, pavers | per job |
+
+**⏳ Coming soon** (sirf waitlist, `trade_waitlist` table): Solar · Roofing & gutters · New home services · Electrical & HVAC.
+Waitlist demand data deta hai: jo trade sabse zyada maanga jaaye, wahi agla banao.
+```sql
+select trade, count(*), count(distinct zip) from trade_waitlist group by 1 order by 2 desc;
+```
+
+**Kahan dikhta hai:**
+- Onboarding step 1: live trades normal cards; coming soon cards grey + "Coming soon", click pe "Notify me" form (email + zip)
+- Landing hero: "New backyard project alerts: pools, fences, patios and more" + "Pick your trade" section (live + waitlist)
+- SEO pages: `/pool-service`, `/fence`, `/landscaping` (signup link trade pre-select karta hai)
+
 ### Customer ka ROI
 - PatioPing: ~$79/month
 - Ek converted lead: ~$1,800/saal

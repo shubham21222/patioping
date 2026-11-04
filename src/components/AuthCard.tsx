@@ -18,10 +18,10 @@ export function AuthShell({
         <Logo tone="reverse" />
         <div className="pb-14">
           <p className="max-w-[22ch] text-[2.5rem] font-extrabold leading-[1.05] [font-stretch:87.5%]">
-            The builder&rsquo;s picked. The pool service isn&rsquo;t.
+            The permit&rsquo;s filed. The homeowner hasn&rsquo;t called you yet.
           </p>
           <p className="mt-5 max-w-[42ch] text-on-deep-2">
-            New pool permits in your zip codes, every morning at 7 AM.
+            New pool, fence and patio permits in your zip codes, every morning at 7 AM.
           </p>
         </div>
         <Waterline className="absolute inset-x-0 bottom-0" />

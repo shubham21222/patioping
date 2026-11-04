@@ -10,9 +10,9 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: "PatioPing · New pool permit alerts for pool service companies",
+  title: "PatioPing · New backyard project alerts for contractors",
   description:
-    "Every new pool permit in your zip codes, in your inbox at 7 AM, with a simple pipeline to turn them into service accounts.",
+    "New pool, fence and patio permits in your zip codes, in your inbox at 7 AM, with a simple pipeline to turn them into customers.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://patioping.com"),
   openGraph: { images: ["/brand/patioping-logo.png"] },
 };

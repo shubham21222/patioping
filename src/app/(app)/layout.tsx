@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { AppNav } from "@/components/AppNav";
@@ -41,7 +42,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             ) : (
               <>Your free week has ended. </>
             )}
-            <a href="/settings/billing" className="font-semibold text-water underline">Choose a plan</a>
+            <Link href="/settings/billing" className="font-semibold text-water underline">Choose a plan</Link>
           </p>
         </div>
       )}

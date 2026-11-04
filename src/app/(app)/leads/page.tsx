@@ -3,6 +3,7 @@ import { ArrowRight, Download } from "lucide-react";
 import { Mark } from "@/components/brand/Logo";
 import { button } from "@/components/ui";
 import { getSession } from "@/lib/session";
+import { tradeById } from "@/lib/trades";
 
 const STAGES = [
   { id: "all", label: "All" },
@@ -21,22 +22,25 @@ type Permit = {
   address: string | null;
   zip: string | null;
   category: string;
+  permit_type: string | null;
   valuation: number | null;
   contractor_name: string | null;
   issued_at: string | null;
 };
 
 const money = (n: number | null) => (n == null ? "Value not listed" : `$${Number(n).toLocaleString("en-US")}`);
-const workLabel = (c: string) => ({ pool: "Pool", spa: "Spa", fence: "Fence", solar: "Solar", roof: "Roof" })[c] ?? "Other";
+const workLabel = (c: string) =>
+  ({ pool: "Pool", spa: "Spa", fence: "Fence", landscaping: "Outdoor", solar: "Solar", roof: "Roof" })[c] ?? "Other";
 
 export default async function LeadsPage({ searchParams }: { searchParams: Promise<{ stage?: string }> }) {
   const { stage = "all" } = await searchParams;
-  const { supabase } = await getSession("/leads");
+  const { supabase, org } = await getSession("/leads");
+  const [one, many] = tradeById(org?.trade ?? "")?.noun ?? ["lead", "leads"];
 
   const since = new Date(Date.now() - 7 * 86_400_000).toISOString();
   let q = supabase
     .from("leads")
-    .select("id, stage, created_at, permits(address, zip, category, valuation, contractor_name, issued_at)")
+    .select("id, stage, created_at, permits(address, zip, category, permit_type, valuation, contractor_name, issued_at)")
     .order("created_at", { ascending: false })
     .limit(100);
   if (stage !== "all") q = q.eq("stage", stage);
@@ -57,7 +61,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <div>
           <h1 className="flex items-baseline gap-3 text-3xl font-extrabold [font-stretch:87.5%] sm:text-4xl">
             <span className="marker text-6xl text-water sm:text-7xl">{todayCount}</span>
-            new {todayCount === 1 ? "pool" : "pools"} today
+            new {todayCount === 1 ? one : many} today
           </h1>
           <p className="num mt-2 text-ink-2">
             {weekCount} this week · {highCount} high value (over ${HIGH_VALUE / 1000}k)
@@ -93,7 +97,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           Couldn&rsquo;t load leads: {error.message}. Refresh to try again.
         </p>
       ) : rows.length === 0 ? (
-        <EmptyState hasTerritory={(territories ?? 0) > 0} filtered={stage !== "all"} />
+        <EmptyState hasTerritory={(territories ?? 0) > 0} filtered={stage !== "all"} many={many} />
       ) : (
         <ul className="mt-6 divide-y divide-line border-y border-line">
           {rows.map((r) => {
@@ -108,7 +112,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
                       <span className="truncate">{p?.address ?? "Address pending"}{p?.zip ? `, ${p.zip}` : ""}</span>
                     </p>
                     <p className="truncate text-sm text-ink-2">
-                      {workLabel(p?.category ?? "other")} · {p?.contractor_name ?? "Builder not listed"}
+                      {p?.permit_type ?? workLabel(p?.category ?? "other")} · {p?.contractor_name ?? "Builder not listed"}
                       {p?.issued_at && <> · issued {new Date(p.issued_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</>}
                     </p>
                   </div>
@@ -126,7 +130,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   );
 }
 
-function EmptyState({ hasTerritory, filtered }: { hasTerritory: boolean; filtered: boolean }) {
+function EmptyState({ hasTerritory, filtered, many }: { hasTerritory: boolean; filtered: boolean; many: string }) {
   if (filtered) {
     return (
       <p className="mt-10 text-ink-2">
@@ -142,8 +146,8 @@ function EmptyState({ hasTerritory, filtered }: { hasTerritory: boolean; filtere
         <h2 className="text-lg font-bold">{hasTerritory ? "Your first alert is on its way" : "Tell us where you work"}</h2>
         <p className="mt-1 max-w-[56ch] text-ink-2">
           {hasTerritory
-            ? "New pool permits in your zip codes will show up here, and in your inbox at 7 AM."
-            : "Add the zip codes you service and we’ll start matching new pool permits to them tonight."}
+            ? `New ${many} in your zip codes will show up here, and in your inbox at 7 AM.`
+            : "Add the zip codes you work in and we’ll start matching new permits to them tonight."}
         </p>
       </div>
       {!hasTerritory && (

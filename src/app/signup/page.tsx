@@ -3,14 +3,16 @@ import { MailCheck } from "lucide-react";
 import { AuthShell, Notice } from "@/components/AuthCard";
 import { SubmitButton } from "@/components/SubmitButton";
 import { input, label } from "@/components/ui";
+import { LIVE_TRADES, tradeById } from "@/lib/trades";
 import { signup } from "../login/actions";
 
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; sent?: string; email?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string; email?: string; trade?: string }>;
 }) {
-  const { error, sent, email } = await searchParams;
+  const { error, sent, email, trade } = await searchParams;
+  const picked = tradeById(trade ?? "");
 
   if (sent) {
     return (
@@ -33,7 +35,7 @@ export default async function SignupPage({
   return (
     <AuthShell
       title="Start your free week"
-      lede="7 days of alerts for your area. No card needed."
+      lede={`7 days of ${picked ? picked.short : "backyard project"} alerts for your area. No card needed.`}
       footer={
         <>
           Already have an account?{" "}
@@ -43,6 +45,14 @@ export default async function SignupPage({
     >
       {error && <Notice tone="error">{error}</Notice>}
       <form action={signup} className="space-y-5">
+        <div>
+          <label htmlFor="trade" className={label}>Your trade</label>
+          <select id="trade" name="trade" defaultValue={picked?.id ?? "pool_service"} className={input}>
+            {LIVE_TRADES.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
         <div>
           <label htmlFor="company" className={label}>Company name</label>
           <input id="company" className={input} name="company" placeholder="Blue Water Pool Service" required autoComplete="organization" />

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { isLiveTrade } from "@/lib/trades";
 
 function safeNext(next: FormDataEntryValue | null) {
   const n = typeof next === "string" ? next : "";
@@ -34,7 +35,10 @@ export async function signup(formData: FormData) {
     password: String(formData.get("password")),
     options: {
       emailRedirectTo: `${await origin()}/auth/callback?next=/onboarding`,
-      data: { company_name: String(formData.get("company") ?? "") },
+      data: {
+        company_name: String(formData.get("company") ?? ""),
+        trade: isLiveTrade(formData.get("trade")) ? formData.get("trade") : "pool_service",
+      },
     },
   });
   if (error) redirect(`/signup?error=${encodeURIComponent(error.message)}`);

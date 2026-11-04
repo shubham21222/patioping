@@ -16,7 +16,9 @@ export async function updateLead(formData: FormData) {
   const stage = String(formData.get("stage"));
   if (!STAGES.includes(stage)) return;
   const followUp = String(formData.get("next_follow_up") ?? "") || null;
-  const wonRaw = String(formData.get("won_value_monthly") ?? "").replace(/[^0-9.]/g, "");
+  const wonRaw = String(formData.get("won_value") ?? "").replace(/[^0-9.]/g, "");
+  const won = stage === "won" && wonRaw ? Number(wonRaw) : null;
+  const monthly = formData.get("won_kind") !== "job";
   const { data: before } = await supabase.from("leads").select("stage").eq("id", id).single();
   if (!before) return;
 
@@ -25,7 +27,8 @@ export async function updateLead(formData: FormData) {
     .update({
       stage,
       next_follow_up: followUp,
-      won_value_monthly: stage === "won" && wonRaw ? Number(wonRaw) : null,
+      won_value_monthly: monthly ? won : null,
+      won_value_job: monthly ? null : won,
     })
     .eq("id", id);
 
