@@ -1,21 +1,39 @@
-import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
-import { DepthMarker, Waterline } from "@/components/brand/Waterline";
-import { ClosingBand, LiveTradeList, SampleAlert, SiteHeader, type AlertItem } from "@/components/marketing";
+import {
+  ArrowUpRight,
+  BellRing,
+  CalendarClock,
+  Download,
+  KanbanSquare,
+  Mail,
+  MapPinned,
+  ShieldCheck,
+  Smartphone,
+  Users,
+} from "lucide-react";
+import { Mark } from "@/components/brand/Logo";
+import {
+  ClosingBand,
+  CtaButton,
+  DashboardPreview,
+  GhostButton,
+  SampleAlert,
+  SiteHeader,
+  STAGE_STYLE,
+  TradeCards,
+  type AlertItem,
+} from "@/components/marketing";
+import { PricingPicker } from "@/components/PricingPicker";
 import { SoonTrades } from "@/components/SoonTrades";
-import { button } from "@/components/ui";
-import { PLANS } from "@/lib/plans";
+import { TradeIcon } from "@/components/TradeIcon";
 
-// Illustrative only: shown inside a frame labeled "Sample alert".
+// Illustrative only: every sample is labeled as such where it renders.
 const sample: AlertItem[] = [
   { addr: "4812 Ridgeview Dr", zip: "78745", work: "Pool + spa", value: 92000, builder: "Hill Country Pools", high: true },
-  { addr: "1907 Barton Hills Dr", zip: "78704", work: "Covered patio + outdoor kitchen", value: 48000, builder: "Texas Outdoor Living" },
-  { addr: "6203 Shadow Valley", zip: "78731", work: "Privacy fence, 180 ft", value: 9800, builder: "Owner-builder" },
-  { addr: "311 Pecan Grove Rd", zip: "78745", work: "Pergola + pavers", value: 16400, builder: "Cedar & Stone" },
-  { addr: "88 Lost Creek Blvd", zip: "78746", work: "Pool", value: 78500, builder: "Blue Haven Pools", high: true },
+  { addr: "1907 Barton Hills Dr", zip: "78704", work: "Covered patio", value: 48000, builder: "Texas Outdoor Living" },
+  { addr: "6203 Shadow Valley", zip: "78731", work: "Privacy fence", value: 9800, builder: "Owner-builder" },
 ];
 
-const stages = ["New", "Contacted", "Postcard sent", "Quoted", "Won"];
+const SOURCES = ["Austin", "Mesa", "Los Angeles", "Miami-Dade", "Maricopa County", "Nashville"];
 
 const faqs = [
   {
@@ -38,207 +56,379 @@ const faqs = [
 
 export default function Home() {
   return (
-    <main>
-      {/* ───── Water ───── */}
-      <section className="bg-deep text-white">
-        <SiteHeader />
-
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:pb-24 lg:pt-16">
-          <div>
-            <h1 className="text-[2.6rem] font-extrabold leading-[1.02] [font-stretch:87.5%] sm:text-6xl lg:text-[4.25rem]">
-              New backyard project alerts: pools, fences, patios and more.
+    <main className="bg-bg">
+      {/* ───── Hero ───── */}
+      <section className="relative overflow-hidden">
+        <div aria-hidden="true" className="absolute inset-0 bg-[url(/art/hills-hero.webp)] bg-cover bg-[center_top]" />
+        <div className="relative pt-3 sm:pt-4">
+          <SiteHeader />
+          <div className="mx-auto max-w-4xl px-4 pt-16 text-center sm:pt-24">
+            <h1 className="text-[2.6rem] font-medium leading-[1.04] sm:text-6xl lg:text-[4.2rem]">
+              New <span className="accent">backyard</span> project alerts: pools, fences, patios and more.
             </h1>
-            <p className="mt-6 max-w-[52ch] text-lg text-on-deep-2">
-              PatioPing reads city and county permit records overnight and emails you the new backyard projects in your zip codes
-              at 7 AM. Address, job value and builder, before anyone else calls.
+            <p className="mx-auto mt-6 max-w-[56ch] text-lg text-ink-2">
+              We read city and county permit records overnight and email you the new projects in your zip codes at 7 AM.
+              Address, job value and builder, before anyone else calls.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href="/signup" className={button("onDeep", "lg")}>
-                Start your free week <ArrowRight size={18} strokeWidth={2.25} />
-              </Link>
-              <span className="text-sm text-on-deep-2">7 days free. No card needed.</span>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <GhostButton href="/#how">See how it works</GhostButton>
+              <CtaButton href="/signup">Start free week</CtaButton>
             </div>
+            <p className="mt-3 text-sm text-ink-3">7 days free. No card needed.</p>
           </div>
 
-          <SampleAlert subject="5 new backyard projects in your area" items={sample} />
+          <div className="relative mx-auto mt-16 max-w-5xl px-4 sm:mt-20">
+            <DashboardPreview />
+          </div>
+          {/* Front ridges sit over the bottom of the mock: the product rising out of the hills */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none relative z-10 -mt-[18vw] h-[30vw] min-h-40 bg-[url(/art/hills-front.webp)] bg-cover bg-top sm:-mt-[16vw]"
+          />
         </div>
       </section>
 
-      {/* ───── Waterline + coping ───── */}
-      <Waterline />
-      <div className="border-b border-line bg-deck">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-10 gap-y-5 px-4 py-6 sm:px-6">
-          <DepthMarker value="7" unit="AM" caption="Alert lands in your time zone" />
-          <DepthMarker value="7" unit="DAYS" caption="Free before you pay anything" />
-          <DepthMarker value="$49" caption="Per month for one county" />
-        </div>
-      </div>
+      {/* ───── Sources ───── */}
+      <section className="mx-auto max-w-5xl px-4 pb-6 text-center">
+        <p className="text-sm text-ink-3">Launching with open permit data from</p>
+        <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+          {SOURCES.map((s) => (
+            <li key={s} className="text-lg font-semibold tracking-tight text-[#4f7899]">{s}</li>
+          ))}
+        </ul>
+      </section>
 
       {/* ───── Trades ───── */}
-      <section id="trades" className="mx-auto max-w-6xl scroll-mt-8 px-4 pt-24 sm:px-6">
-        <h2 className="text-3xl font-extrabold leading-tight [font-stretch:87.5%] sm:text-[2.6rem]">Pick your trade</h2>
-        <p className="mt-3 max-w-[60ch] text-lg text-ink-2">
-          Each trade gets its own permit filter, so a fence crew never wades through pool permits.
-        </p>
-        <div className="mt-10">
-          <LiveTradeList />
+      <section id="trades" className="mx-auto max-w-5xl scroll-mt-24 px-4 pt-24 sm:px-6">
+        <div className="text-center">
+          <TradeOrbit />
+          <h2 className="mt-8 text-4xl font-medium leading-tight sm:text-5xl">
+            Built for every <span className="accent">backyard</span> trade
+          </h2>
+          <p className="mx-auto mt-3 max-w-[52ch] text-ink-2">
+            Each trade gets its own permit filter, so a fence crew never wades through pool permits.
+          </p>
         </div>
-
-        <h3 className="mt-14 text-xl font-bold">Coming soon</h3>
-        <p className="mt-1 max-w-[60ch] text-ink-2">
-          Tell us what you&rsquo;d use. We build the trade with the most requests next.
-        </p>
-        <div className="mt-5">
-          <SoonTrades source="landing" />
+        <div className="mt-12">
+          <TradeCards />
+        </div>
+        <div className="mt-10 rounded-2xl border border-line bg-white p-5 sm:p-6">
+          <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-baseline">
+            <h3 className="font-medium">Coming soon</h3>
+            <p className="text-sm text-ink-2">Tell us what you&rsquo;d use. The trade with the most requests ships next.</p>
+          </div>
+          <div className="mt-4">
+            <SoonTrades source="landing" />
+          </div>
         </div>
       </section>
 
-      {/* ───── Pipeline ───── */}
-      <section className="mx-auto grid max-w-6xl gap-12 px-4 py-24 sm:px-6 lg:grid-cols-[1fr_1.5fr] lg:items-center">
-        <div>
-          <h2 className="text-3xl font-extrabold leading-tight [font-stretch:87.5%] sm:text-[2.6rem]">
-            From permit to a stop on your route
+      {/* ───── Benefits ───── */}
+      <section id="how" className="mx-auto mt-28 max-w-6xl scroll-mt-24 px-3 sm:px-6">
+        <div className="rounded-[32px] bg-mint px-4 py-16 sm:px-10 sm:py-20">
+          <div className="text-center">
+            <h2 className="text-4xl font-medium leading-tight sm:text-5xl">
+              From permit to <span className="accent">paid job</span>
+            </h2>
+            <p className="mx-auto mt-3 max-w-[50ch] text-ink-2">Three things happen every morning, before your first stop.</p>
+          </div>
+          <div className="mt-12 grid gap-4 lg:grid-cols-3">
+            <BenefitCard
+              icon={<BellRing size={18} />}
+              title="New permits, cleaned up"
+              body="Overnight we pull city and county records, keep the ones for your trade and zip codes, and drop the noise."
+            >
+              <div className="space-y-2">
+                {(
+                  [
+                    ["Pool + spa", "$92,000", true],
+                    ["Covered patio", "$48,000", false],
+                    ["Interior remodel", "skipped", false],
+                  ] as const
+                ).map(([w, v, hi]) => (
+                  <div key={w} className="flex items-center justify-between rounded-lg border border-line bg-white px-3 py-2 text-[13px]">
+                    <span className={`flex items-center gap-2 ${v === "skipped" ? "text-ink-3 line-through" : ""}`}>
+                      {hi && <span className="h-1.5 w-1.5 rounded-full bg-sun" />}
+                      {w}
+                    </span>
+                    <span className={`num ${v === "skipped" ? "text-ink-3" : "font-medium"}`}>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </BenefitCard>
+            <BenefitCard
+              icon={<KanbanSquare size={18} />}
+              title="A pipeline that fits in a truck"
+              body="Mark a lead contacted, set a follow-up, or send a postcard. Big buttons, works one-handed."
+            >
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  ["New", "4812 Ridgeview"],
+                  ["Contacted", "1907 Barton"],
+                  ["Won", "311 Pecan"],
+                ].map(([s, a]) => (
+                  <div key={s} className="min-w-0 rounded-lg border border-line bg-white p-2">
+                    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STAGE_STYLE[s]}`}>{s}</span>
+                    <p className="mt-2 truncate text-[12px] font-medium">{a}</p>
+                  </div>
+                ))}
+              </div>
+            </BenefitCard>
+            <BenefitCard
+              icon={<ArrowUpRight size={18} />}
+              title="See what it brought in"
+              body="Log what each job is worth when you win it. Your monthly report adds it up."
+            >
+              <div className="rounded-lg border border-line bg-white p-3">
+                <p className="text-[11px] text-ink-3">Won this month · example</p>
+                <p className="marker mt-1 text-2xl">$11,600</p>
+                <div className="mt-3 flex h-12 items-end gap-1.5" role="presentation">
+                  {[28, 40, 34, 52, 46, 70, 88].map((h, i) => (
+                    <span key={i} className={`flex-1 rounded-sm ${i === 6 ? "bg-water" : "bg-water-soft"}`} style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+              </div>
+            </BenefitCard>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── Bento ───── */}
+      <section className="mx-auto max-w-6xl px-4 pt-28 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-4xl font-medium leading-tight sm:text-5xl">
+            Made for crews in the <span className="accent">field</span>
           </h2>
-          <p className="mt-5 max-w-[50ch] text-lg text-ink-2">
-            Most contractors track leads in a notebook or a group text. Every lead in PatioPing comes with a simple pipeline:
-            mark it contacted from the truck, set a follow-up, and log what the job is worth when you win it.
-          </p>
-          <ul className="mt-7 space-y-3 text-ink">
-            {["Notes and follow-up reminders on every address", "One-click postcards to the homeowner", "Export to CSV whenever you want"].map((t) => (
-              <li key={t} className="flex gap-3">
-                <Check size={20} className="mt-0.5 shrink-0 text-water" strokeWidth={2.5} />
-                {t}
-              </li>
-            ))}
-          </ul>
+          <p className="mx-auto mt-3 max-w-[50ch] text-ink-2">No setup calls, no training. Pick your zip codes and you&rsquo;re done.</p>
         </div>
 
-        <PipelinePreview />
+        <div className="mt-12 grid gap-4 md:grid-cols-6">
+          <Bento className="md:col-span-3" icon={<Mail size={18} />} title="The 7 AM alert" body="One email a day with every new project in your area. Each address links straight to the lead.">
+            <SampleAlert subject="3 new backyard projects in your area" items={sample} />
+          </Bento>
+          <Bento className="md:col-span-3" icon={<MapPinned size={18} />} title="Your territory, by zip code" body="Paste the zips you work in, and pick when the alert lands. Change either any time.">
+            <div className="flex flex-wrap gap-2">
+              {["78701", "78704", "78731", "78745", "78746", "78749"].map((z, i) => (
+                <span
+                  key={z}
+                  className={`num rounded-full border px-3 py-1.5 text-sm ${i < 4 ? "border-[#cfe3f1] bg-water-soft text-water" : "border-line bg-white text-ink-2"}`}
+                >
+                  {z}
+                </span>
+              ))}
+              <span className="rounded-full border border-dashed border-line-2 px-3 py-1.5 text-sm text-ink-3">+ add zip</span>
+            </div>
+            <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+              {[
+                ["5:00", "Early crew"],
+                ["7:00", "Default"],
+                ["9:00", "Office day"],
+              ].map(([t, l], i) => (
+                <div key={t} className={`rounded-xl border p-3 ${i === 1 ? "border-water bg-white" : "border-line bg-white/60"}`}>
+                  <p className="marker text-xl">{t}</p>
+                  <p className="mt-1 text-[11px] text-ink-3">{l}</p>
+                </div>
+              ))}
+            </div>
+          </Bento>
+          <Bento className="md:col-span-2" icon={<CalendarClock size={18} />} title="Follow-ups that don’t slip" body="Set a date on any lead. It shows up first that morning.">
+            <ul className="space-y-2 text-[13px]">
+              {[
+                ["Call back 1907 Barton Hills", "Today"],
+                ["Send quote to 88 Lost Creek", "Thu"],
+              ].map(([t, d]) => (
+                <li key={t} className="flex items-center justify-between rounded-lg border border-line bg-white px-3 py-2">
+                  <span className="truncate">{t}</span>
+                  <span className="ml-3 shrink-0 text-ink-3">{d}</span>
+                </li>
+              ))}
+            </ul>
+          </Bento>
+          <Bento className="md:col-span-2" icon={<Users size={18} />} title="Bring the crew" body="Growth and Pro add teammates and lead assignment.">
+            <div className="flex items-center">
+              {["MR", "JS", "AL"].map((i, n) => (
+                <span
+                  key={i}
+                  className={`grid h-10 w-10 place-items-center rounded-full border-2 border-white text-xs font-semibold ${
+                    ["bg-water-soft text-water", "bg-violet-soft text-violet", "bg-green-soft text-green"][n]
+                  } ${n ? "-ml-2" : ""}`}
+                >
+                  {i}
+                </span>
+              ))}
+              <span className="ml-3 text-sm text-ink-2">Assign leads by route</span>
+            </div>
+          </Bento>
+          <div className="relative min-h-64 overflow-hidden rounded-3xl bg-water p-6 text-white sm:p-8 md:col-span-2">
+            <Smartphone size={18} />
+            <h3 className="mt-4 text-lg font-medium">On your phone</h3>
+            <p className="mt-1 max-w-[22ch] text-sm text-white/85">Works in your phone&rsquo;s browser. No app to install.</p>
+            <PhoneMock />
+          </div>
+          <Bento className="md:col-span-3" icon={<Download size={18} />} title="Your data, any time" body="Export every lead and its stage to CSV whenever you want.">
+            <div className="overflow-x-auto rounded-lg border border-line bg-white px-3 py-2 font-mono text-[12px] leading-relaxed text-ink-2">
+              <p className="whitespace-nowrap">address,zip,work,valuation,stage</p>
+              <p className="whitespace-nowrap">4812 Ridgeview Dr,78745,pool,92000,new</p>
+              <p className="whitespace-nowrap">1907 Barton Hills Dr,78704,landscaping,48000,contacted</p>
+            </div>
+          </Bento>
+          <Bento className="md:col-span-3" icon={<ShieldCheck size={18} />} title="Public records only" body="We never call, text or email homeowners for you. You decide how to reach out.">
+            <div className="flex flex-wrap gap-2 text-[13px]">
+              {["Open-data portals", "Nothing behind a login", "Postcards, not cold texts"].map((t) => (
+                <span key={t} className="rounded-full border border-line bg-white px-3 py-1.5 text-ink-2">{t}</span>
+              ))}
+            </div>
+          </Bento>
+        </div>
       </section>
 
       {/* ───── The math ───── */}
-      <section className="bg-deck">
-        <div className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-          <h2 className="max-w-[18ch] text-4xl font-extrabold leading-[1.05] [font-stretch:87.5%] sm:text-6xl">
-            One new customer pays for the year.
+      <section className="mx-auto max-w-5xl px-4 pt-28 sm:px-6">
+        <div className="rounded-3xl border border-line bg-white p-6 sm:p-12">
+          <h2 className="text-3xl font-medium sm:text-4xl">
+            The <span className="accent">math</span>
           </h2>
-          <dl className="mt-12 grid max-w-5xl gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
-            <div className="bg-white p-6 sm:p-8">
-              <dt className="text-sm font-semibold text-ink-2">PatioPing Starter, 12 months</dt>
-              <dd className="marker mt-3 text-5xl text-ink">$588</dd>
-              <dd className="num mt-2 text-sm text-ink-3">$49 × 12</dd>
-            </div>
-            <div className="bg-white p-6 sm:p-8">
-              <dt className="text-sm font-semibold text-ink-2">One weekly-service pool at $150/mo</dt>
-              <dd className="marker mt-3 text-5xl text-water">$1,800</dd>
-              <dd className="num mt-2 text-sm text-ink-3">$150 × 12, every year they stay</dd>
-            </div>
-            <div className="bg-white p-6 sm:p-8">
-              <dt className="text-sm font-semibold text-ink-2">One 180 ft privacy fence</dt>
-              <dd className="marker mt-3 text-5xl text-water">$9,800</dd>
-              <dd className="num mt-2 text-sm text-ink-3">From the sample alert above</dd>
-            </div>
+          <p className="mt-6 max-w-[30ch] text-2xl leading-snug sm:text-[2rem]">One new customer pays for a whole year of PatioPing.</p>
+          <dl className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
+            {[
+              ["PatioPing Starter, 12 months", "$588", "$49 × 12", "text-ink"],
+              ["One pool on weekly service", "$1,800", "$150/mo × 12, every year they stay", "text-water"],
+              ["One 180 ft privacy fence", "$9,800", "One job", "text-water"],
+            ].map(([k, v, n, c]) => (
+              <div key={k} className="bg-white p-5 sm:p-6">
+                <dt className="text-sm text-ink-2">{k}</dt>
+                <dd className={`marker mt-3 text-4xl ${c}`}>{v}</dd>
+                <dd className="num mt-2 text-xs text-ink-3">{n}</dd>
+              </div>
+            ))}
           </dl>
-          <p className="mt-6 max-w-[60ch] text-sm text-ink-3">
-            Use your own prices. Examples are illustrative.
-          </p>
+          <p className="mt-4 text-xs text-ink-3">Examples are illustrative. Use your own prices.</p>
         </div>
       </section>
 
       {/* ───── Pricing ───── */}
-      <section id="pricing" className="mx-auto max-w-6xl scroll-mt-8 px-4 py-24 sm:px-6">
-        <h2 className="text-3xl font-extrabold [font-stretch:87.5%] sm:text-[2.6rem]">Pricing</h2>
-        <p className="mt-3 text-lg text-ink-2">Every plan starts with 7 free days. Pay yearly and get 2 months free.</p>
-
-        <div className="mt-12 grid overflow-hidden rounded-2xl border border-line lg:grid-cols-3">
-          {PLANS.map((p, i) => (
-            <div
-              key={p.id}
-              className={`flex flex-col p-6 sm:p-8 ${i > 0 ? "border-t border-line lg:border-l lg:border-t-0" : ""} ${p.featured ? "bg-deep text-white" : "bg-white"}`}
-            >
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-lg font-bold">{p.name}</h3>
-                {p.featured && <span className="text-sm font-semibold text-aqua">For crews</span>}
-              </div>
-              <p className={`mt-1 text-sm ${p.featured ? "text-on-deep-2" : "text-ink-2"}`}>{p.blurb}</p>
-              <p className="mt-6 flex items-baseline gap-1">
-                <span className="marker text-5xl">${p.price}</span>
-                <span className={p.featured ? "text-on-deep-2" : "text-ink-3"}>/ month</span>
-              </p>
-              <ul className="mt-6 flex-1 space-y-2.5">
-                {p.features.map((f) => (
-                  <li key={f} className="flex gap-2.5">
-                    <Check size={18} strokeWidth={2.5} className={`mt-0.5 shrink-0 ${p.featured ? "text-aqua" : "text-water"}`} />
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Link href={`/signup?plan=${p.id}`} className={`mt-8 ${button(p.featured ? "onDeep" : "quiet", "lg")}`}>
-                Start free with {p.name}
-              </Link>
-            </div>
-          ))}
+      <section id="pricing" className="mx-auto max-w-5xl scroll-mt-24 px-4 pt-28 sm:px-6">
+        <div className="text-center">
+          <h2 className="text-4xl font-medium leading-tight sm:text-5xl">
+            Simple pricing for <span className="accent">every</span> crew
+          </h2>
+          <p className="mx-auto mt-3 max-w-[50ch] text-ink-2">Every plan starts with 7 free days. Pay yearly and get 2 months free.</p>
+        </div>
+        <div className="mt-12">
+          <PricingPicker />
         </div>
       </section>
 
       {/* ───── FAQ ───── */}
-      <section className="border-t border-line">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-24 sm:px-6 lg:grid-cols-[1fr_2fr]">
-          <h2 className="text-3xl font-extrabold [font-stretch:87.5%] sm:text-[2.6rem]">Questions</h2>
-          <div className="divide-y divide-line border-y border-line">
-            {faqs.map((f) => (
-              <details key={f.q} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
-                  {f.q}
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-line text-ink-2 transition-transform duration-200 group-open:rotate-45">
-                    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" /></svg>
-                  </span>
-                </summary>
-                <p className="mt-3 max-w-[65ch] text-ink-2">{f.a}</p>
-              </details>
-            ))}
-          </div>
+      <section id="faq" className="mx-auto grid max-w-5xl scroll-mt-24 gap-10 px-4 pt-28 sm:px-6 lg:grid-cols-[1fr_2fr]">
+        <h2 className="text-4xl font-medium leading-tight">
+          Common <span className="accent">questions</span>
+        </h2>
+        <div className="divide-y divide-line border-y border-line">
+          {faqs.map((f) => (
+            <details key={f.q} className="group py-5">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium [&::-webkit-details-marker]:hidden">
+                {f.q}
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-line bg-white text-ink-2 transition-transform duration-200 group-open:rotate-45">
+                  <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+                    <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  </svg>
+                </span>
+              </summary>
+              <p className="mt-3 max-w-[65ch] text-ink-2">{f.a}</p>
+            </details>
+          ))}
         </div>
       </section>
 
-      <ClosingBand headline="Tomorrow at 7 AM, see who’s building in your area." />
+      <div className="h-16" />
+      <ClosingBand
+        title={
+          <>
+            Ready to reach the homeowner <span className="accent">first</span>?
+          </>
+        }
+      />
     </main>
   );
 }
 
-function PipelinePreview() {
+function BenefitCard({ icon, title, body, children }: { icon: React.ReactNode; title: string; body: string; children: React.ReactNode }) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-line bg-deck p-3 sm:p-4" role="img" aria-label="Pipeline with stages New, Contacted, Postcard sent, Quoted and Won">
-      <div className="grid min-w-[560px] grid-cols-5 gap-2">
-        {stages.map((s, i) => (
-          <div key={s}>
-            <p className="mb-2 flex items-center justify-between px-1 text-xs font-semibold text-ink-2">
-              {s}
-              <span className="num text-ink-3">{[2, 1, 1, 1, 1][i]}</span>
-            </p>
-            <div className="space-y-2">
-              {i === 0 && <MiniCard addr="4812 Ridgeview" meta="Pool + spa" high />}
-              {i === 0 && <MiniCard addr="311 Pecan Grove" meta="Pergola" />}
-              {i === 1 && <MiniCard addr="1907 Barton Hills" meta="Follow up Thu" />}
-              {i === 2 && <MiniCard addr="6203 Shadow Valley" meta="Mailed Mon" />}
-              {i === 3 && <MiniCard addr="88 Lost Creek" meta="Fence, $9.8k quote" />}
-              {i === 4 && <MiniCard addr="2210 Oak Bend" meta="Pool, $150/mo" won />}
-            </div>
-          </div>
-        ))}
+    <div className="flex flex-col rounded-3xl border border-white bg-white/70 p-5 shadow-[var(--shadow-card)]">
+      <span className="grid h-9 w-9 place-items-center rounded-full bg-water-soft text-water">{icon}</span>
+      <h3 className="mt-5 text-lg font-medium">{title}</h3>
+      <p className="mt-1 text-sm text-ink-2">{body}</p>
+      <div className="mt-auto pt-6">
+        <div className="rounded-2xl bg-deck p-3">{children}</div>
       </div>
     </div>
   );
 }
 
-function MiniCard({ addr, meta, high, won }: { addr: string; meta: string; high?: boolean; won?: boolean }) {
+function Bento({
+  className = "",
+  icon,
+  title,
+  body,
+  children,
+}: {
+  className?: string;
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={`rounded-lg border bg-white p-2.5 ${won ? "border-water" : "border-line"}`}>
-      <p className="flex items-center gap-1.5 text-[13px] font-semibold">
-        {high && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-sun" />}
-        <span className="truncate">{addr}</span>
-      </p>
-      <p className={`mt-0.5 truncate text-xs ${won ? "font-semibold text-water" : "text-ink-3"}`}>{meta}</p>
+    <div className={`overflow-hidden rounded-3xl border border-line bg-[#f2f7fa] p-6 sm:p-8 ${className}`}>
+      <span className="text-water">{icon}</span>
+      <h3 className="mt-4 text-lg font-medium">{title}</h3>
+      <p className="mt-1 max-w-[46ch] text-sm text-ink-2">{body}</p>
+      <div className="mt-6">{children}</div>
+    </div>
+  );
+}
+
+function PhoneMock() {
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute -bottom-20 right-5 w-40 rounded-[28px] border-[5px] border-deep-2 bg-white p-2.5 text-ink shadow-[var(--shadow-float)] sm:right-6"
+    >
+      <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-deck-2" />
+      <p className="text-[10px] text-ink-3">Today</p>
+      <p className="text-[13px] font-medium">5 new projects</p>
+      {["4812 Ridgeview", "1907 Barton", "6203 Shadow V."].map((a, i) => (
+        <div key={a} className="mt-1.5 rounded-lg border border-line px-2 py-1.5">
+          <p className="truncate text-[10px] font-medium">{a}</p>
+          <p className="text-[9px] text-ink-3">{["Pool + spa", "Patio", "Fence"][i]}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Live trades arranged around the mark, in place of customer faces we don't have yet. */
+function TradeOrbit() {
+  const items = [
+    { name: "waves" as const, cls: "left-[6%] top-[48%] h-12 w-12" },
+    { name: "fence" as const, cls: "left-[27%] top-[0%] h-14 w-14" },
+    { name: "trees" as const, cls: "right-[26%] top-[6%] h-14 w-14" },
+    { name: "fence" as const, cls: "right-[5%] top-[54%] h-10 w-10" },
+  ];
+  return (
+    <div aria-hidden="true" className="relative mx-auto h-32 max-w-md">
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <Mark size={64} />
+      </div>
+      {items.map((it, i) => (
+        <span
+          key={i}
+          className={`absolute grid place-items-center rounded-full border border-white bg-white text-water shadow-[var(--shadow-card)] ${it.cls}`}
+        >
+          <TradeIcon name={it.name} size={20} />
+        </span>
+      ))}
     </div>
   );
 }

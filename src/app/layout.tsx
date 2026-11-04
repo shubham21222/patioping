@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Geist, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
-const archivo = Archivo({
-  variable: "--font-archivo",
+const geist = Geist({ variable: "--font-geist", subsets: ["latin"], display: "swap" });
+const instrument = Instrument_Serif({
+  variable: "--font-instrument",
   subsets: ["latin"],
-  axes: ["wdth"],
+  weight: "400",
+  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -17,11 +19,11 @@ export const metadata: Metadata = {
   openGraph: { images: ["/brand/patioping-logo.png"] },
 };
 
-export const viewport: Viewport = { themeColor: "#0b3b66" };
+export const viewport: Viewport = { themeColor: "#e2eef5" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={archivo.variable}>
+    <html lang="en" className={`${geist.variable} ${instrument.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );

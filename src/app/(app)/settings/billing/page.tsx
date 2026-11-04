@@ -21,7 +21,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
   return (
     <div>
-      <h1 className="text-3xl font-extrabold [font-stretch:87.5%] sm:text-4xl">Billing</h1>
+      <p className="text-sm text-ink-3">Dashboard <span className="mx-1.5">/</span> <span className="text-ink-2">Billing</span></p>
+      <h1 className="mt-3 text-4xl font-normal tracking-tight sm:text-[2.6rem]">Billing</h1>
 
       <div className="mt-6 max-w-3xl">
         {error && <Notice tone="error">{error}</Notice>}
@@ -30,27 +31,27 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
         )}
       </div>
 
-      <dl className="mt-4 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-3">
+      <dl className="mt-4 grid max-w-3xl gap-px overflow-hidden rounded-[22px] border border-white bg-line shadow-[var(--shadow-card)] sm:grid-cols-3">
         <div className="bg-white p-5">
           <dt className="text-sm text-ink-2">Plan</dt>
-          <dd className="mt-1 text-lg font-bold">{current?.name ?? "Free week"}</dd>
+          <dd className="mt-1 text-lg font-medium">{current?.name ?? "Free week"}</dd>
         </div>
         <div className="bg-white p-5">
           <dt className="text-sm text-ink-2">Status</dt>
-          <dd className="mt-1 text-lg font-bold">{STATUS[org?.plan_status ?? "trialing"] ?? org?.plan_status}</dd>
+          <dd className="mt-1 text-lg font-medium">{STATUS[org?.plan_status ?? "trialing"] ?? org?.plan_status}</dd>
         </div>
         <div className="bg-white p-5">
           <dt className="text-sm text-ink-2">{org?.plan === "trial" ? "Free week ends" : "Renews"}</dt>
-          <dd className="num mt-1 text-lg font-bold">
+          <dd className="num mt-1 text-lg font-medium">
             {periodEnd ? new Date(periodEnd).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—"}
           </dd>
         </div>
       </dl>
 
-      <h2 className="mt-14 text-xl font-bold">{current ? "Change plan" : "Choose a plan"}</h2>
+      <h2 className="mt-12 text-xl font-medium">{current ? "Change plan" : "Choose a plan"}</h2>
       <p className="mt-1 text-ink-2">Checkout is handled by Whop. Cancel any time from your Whop account.</p>
 
-      <div className="mt-6 grid overflow-hidden rounded-2xl border border-line lg:grid-cols-3">
+      <div className="mt-6 grid overflow-hidden rounded-[22px] border border-white bg-white shadow-[var(--shadow-card)] lg:grid-cols-3">
         {PLANS.map((p, i) => {
           const isCurrent = p.id === org?.plan;
           return (
@@ -60,7 +61,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               className={`flex flex-col p-6 ${i > 0 ? "border-t border-line lg:border-l lg:border-t-0" : ""}`}
             >
               <input type="hidden" name="plan" value={p.id} />
-              <h3 className="font-bold">{p.name}</h3>
+              <h3 className="font-medium">{p.name}</h3>
               <p className="mt-3 flex items-baseline gap-1">
                 <span className="marker text-4xl">${p.price}</span>
                 <span className="text-ink-3">/ month</span>
@@ -75,7 +76,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               </ul>
               <div className="mt-6">
                 {isCurrent ? (
-                  <p className="flex h-13 items-center justify-center rounded-[10px] bg-deck font-semibold text-ink-2">Current plan</p>
+                  <p className="flex h-12 items-center justify-center rounded-full bg-deck font-medium text-ink-2">Current plan</p>
                 ) : role === "owner" ? (
                   <SubmitButton variant={p.featured ? "primary" : "quiet"} pendingLabel="Opening checkout…">
                     {current ? `Switch to ${p.name}` : `Choose ${p.name}`}

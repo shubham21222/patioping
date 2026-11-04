@@ -25,19 +25,20 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-3xl font-extrabold [font-stretch:87.5%] sm:text-4xl">Your territory</h1>
+      <p className="text-sm text-ink-3">Dashboard <span className="mx-1.5">/</span> <span className="text-ink-2">Territory</span></p>
+      <h1 className="mt-3 text-4xl font-normal tracking-tight sm:text-[2.6rem]">Your territory</h1>
       <p className="mt-2 text-ink-2">Three answers and your first alert goes out tomorrow morning.</p>
 
       {error && <div className="mt-6"><Notice tone="error">{error}</Notice></div>}
 
       {/* Lives outside the <form> so the waitlist form below isn't nested; radios join via form=. */}
-      <fieldset className="mt-10">
-        <legend className="text-lg font-bold">Pick your trade</legend>
+      <div className="mt-8 space-y-3"><fieldset className="rounded-[22px] border border-white bg-white shadow-[var(--shadow-card)] p-5 sm:p-6">
+        <legend className="text-lg font-medium">Pick your trade</legend>
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
           {LIVE_TRADES.map((t) => (
             <label
               key={t.id}
-              className="flex cursor-pointer flex-col gap-3 rounded-[12px] border border-line p-4 transition-colors hover:border-ink-3 has-[:checked]:border-water has-[:checked]:bg-[#eef6fc] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-water"
+              className="flex cursor-pointer flex-col gap-3 rounded-2xl border border-line p-4 transition-colors hover:border-ink-3 has-[:checked]:border-water has-[:checked]:bg-water-soft has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-water"
             >
               <span className="flex items-center justify-between">
                 <TradeIcon name={t.icon} size={24} className="text-water" />
@@ -65,9 +66,9 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         </div>
       </fieldset>
 
-      <form id={FORM_ID} action={saveTerritory} className="mt-12 space-y-12">
+      <form id={FORM_ID} action={saveTerritory} className="rounded-[22px] border border-white bg-white shadow-[var(--shadow-card)] space-y-10 p-5 sm:p-6">
         <fieldset>
-          <legend className="text-lg font-bold">Which zip codes do you work in?</legend>
+          <legend className="text-lg font-medium">Which zip codes do you work in?</legend>
           <label htmlFor="zips" className="sr-only">Zip codes</label>
           <textarea
             id="zips"
@@ -85,7 +86,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         </fieldset>
 
         <fieldset className="grid gap-5 sm:grid-cols-2">
-          <legend className="mb-4 text-lg font-bold">When should the alert arrive?</legend>
+          <legend className="mb-4 text-lg font-medium">When should the alert arrive?</legend>
           <div>
             <label htmlFor="hour" className={label}>Time</label>
             <select id="hour" name="alert_hour" defaultValue={org?.alert_hour_local ?? 7} className={input}>
@@ -104,10 +105,11 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           </div>
         </fieldset>
 
-        <div className="border-t border-line pt-8">
+        <div className="border-t border-line pt-6">
           <SubmitButton pendingLabel="Saving…" className="w-full sm:w-auto">Save and go to leads</SubmitButton>
         </div>
       </form>
+      </div>
     </div>
   );
 }

@@ -89,4 +89,10 @@ Custom domain: Cloudflare dashboard → Workers → patioping → Settings → D
 
 ## Design
 
-Direction "Waterline": deep pool water for the hero, a mosaic waterline band, pale concrete deck for working screens, depth-marker numerals (Archivo, semi-condensed) for counts and prices. Sun yellow marks high-value leads only. Light theme because crews use it on a phone in full sun.
+Direction "Hill Country mist": pale sky ground, layered blue ridges, white working surfaces. Geist for UI, Instrument Serif italic for one accent word per heading. One blue (`--water`) for actions; sun amber marks high-value leads only. Tokens live in `src/app/globals.css`.
+
+The landscape images in `public/art/` are generated, not stock: `python3 scripts/generate-hills.py public/art` (numpy + Pillow, seeded, so output is reproducible).
+
+- `hills-hero.webp` — hero and auth background
+- `hills-front.webp` — transparent foreground ridges that overlap the hero dashboard mock
+- `hills-band.webp` — closing CTA background

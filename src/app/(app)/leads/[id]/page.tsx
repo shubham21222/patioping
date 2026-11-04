@@ -49,12 +49,12 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
   const activities = (lead.lead_activities ?? []) as { id: string; type: string; body: string | null; created_at: string }[];
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-      <div>
-        <Link href="/leads" className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-2 hover:text-ink">
+    <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr]">
+      <div className="rounded-[22px] border border-white bg-white shadow-[var(--shadow-card)] p-5 sm:p-8">
+        <Link href="/leads" className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-2 hover:text-ink">
           <ArrowLeft size={16} /> All leads
         </Link>
-        <h1 className="mt-4 text-3xl font-extrabold leading-tight [font-stretch:87.5%] sm:text-4xl">
+        <h1 className="mt-5 text-3xl font-normal leading-tight tracking-tight sm:text-4xl">
           {p.address ?? "Address pending"}
         </h1>
         {p.zip && <p className="mt-1 text-lg text-ink-2">{p.zip}</p>}
@@ -63,7 +63,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
           {facts.map(([k, v]) => (
             <div key={k} className="grid grid-cols-[7.5rem_1fr] gap-4 py-3">
               <dt className="text-ink-2">{k}</dt>
-              <dd className="num font-semibold">{v}</dd>
+              <dd className="num font-medium">{v}</dd>
             </div>
           ))}
         </dl>
@@ -73,13 +73,13 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
             href={String(p.source_url)}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-water underline"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-water underline"
           >
             View the public record <ExternalLink size={14} />
           </a>
         )}
 
-        <h2 className="mt-12 text-lg font-bold">Activity</h2>
+        <h2 className="mt-12 text-lg font-medium">Activity</h2>
         <form action={addNote} className="mt-4 flex flex-col gap-3 sm:flex-row">
           <input type="hidden" name="id" value={lead.id} />
           <label htmlFor="note" className="sr-only">Add a note</label>
@@ -103,7 +103,7 @@ export default async function LeadPage({ params }: { params: Promise<{ id: strin
         </ol>
       </div>
 
-      <aside className="h-fit rounded-2xl bg-deck p-5 sm:p-6 lg:sticky lg:top-6">
+      <aside className="h-fit rounded-[22px] border border-white bg-white shadow-[var(--shadow-card)] p-5 sm:p-6 lg:sticky lg:top-5">
         <form action={updateLead} className="space-y-5">
           <input type="hidden" name="id" value={lead.id} />
           <div>
