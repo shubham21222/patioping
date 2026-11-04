@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { normalize } from "./normalize";
+import { enrichZips } from "./enrich";
+import { normalize, redactRaw } from "./normalize";
 import { fetchSource } from "./sources";
 import type { Jurisdiction, NormalizedPermit } from "./types";
 
@@ -9,6 +10,7 @@ export type RunResult = {
   kept: number;
   byCategory: Record<string, number>;
   leadsCreated: number;
+  zipsFilled: number;
   error?: string;
 };
 
@@ -26,7 +28,7 @@ export async function runSource(
 ): Promise<RunResult> {
   // Re-read a few days back every run: portals often publish permits late or edit them.
   const since = opts.since ?? daysAgo(opts.lookbackDays ?? 7);
-  const result: RunResult = { jurisdiction: j.name, fetched: 0, kept: 0, byCategory: {}, leadsCreated: 0 };
+  const result: RunResult = { jurisdiction: j.name, fetched: 0, kept: 0, byCategory: {}, leadsCreated: 0, zipsFilled: 0 };
   const startedAt = new Date().toISOString();
 
   try {
@@ -37,10 +39,16 @@ export async function runSource(
     for (const r of raw) {
       const n = normalize(j, r);
       if (!n || n.category === "other") continue;
-      keep.push({ n, raw: r });
+      keep.push({ n, raw: redactRaw(r) });
       result.byCategory[n.category] = (result.byCategory[n.category] ?? 0) + 1;
     }
     result.kept = keep.length;
+
+    // Sources without a zip column (Mesa, Orlando): leads match on zip, so fill them in.
+    result.zipsFilled = await enrichZips(
+      keep.map((k) => k.n),
+      { city: j.name, state: j.state },
+    );
 
     for (let i = 0; i < keep.length; i += 500) {
       const chunk = keep.slice(i, i + 500);

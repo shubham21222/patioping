@@ -133,3 +133,60 @@ test("ArcGIS: pages on exceededTransferLimit and keeps geometry", async () => {
   assert.equal(p.lng, -111.92);
   assert.equal(p.issued_at, "2026-11-03");
 });
+
+test("Mesa-shaped residential pool permit normalizes; zip comes from enrichment", async () => {
+  const { enrichZips } = await import("../src/lib/ingest/enrich");
+  const mesa = asJurisdiction(sourceByKey("mesa")!);
+  const p = normalize(mesa, {
+    permit_number: "PMT26-01234",
+    issued_date: "2026-10-30T00:00:00.000",
+    record_type: "Residential",
+    type_of_work: "Pool/Spa",
+    description_of_work: "New in-ground swimming pool and spa",
+    job_value: 64000,
+    property_address: "100 E EXAMPLE ST",
+    latitude: 33.41,
+    longitude: -111.83,
+    contractor_name: "SAMPLE POOLS CO",
+    contractor_phone: "(000) 000-0000",
+  })!;
+  assert.equal(p.category, "pool");
+  assert.equal(p.zip, null);
+  assert.equal(p.permit_type, "Residential · Pool/Spa");
+  assert.ok(!JSON.stringify(p).includes("000-0000"), "contractor phone must not be mapped");
+
+  const seen: string[] = [];
+  const fake = (async (u: string) => {
+    seen.push(new URL(u).searchParams.get("address")!);
+    return new Response(JSON.stringify({ result: { addressMatches: [{ addressComponents: { zip: "85201" } }] } }));
+  }) as typeof fetch;
+  assert.equal(await enrichZips([p], { city: "Mesa", state: "AZ" }, { fetchImpl: fake }), 1);
+  assert.equal(p.zip, "85201");
+  assert.deepEqual(seen, ["100 E EXAMPLE ST, Mesa, AZ"]);
+});
+
+test("zip enrichment tolerates no match and network errors", async () => {
+  const { lookupZip } = await import("../src/lib/ingest/enrich");
+  const none = (async () => new Response(JSON.stringify({ result: { addressMatches: [] } }))) as typeof fetch;
+  const boom = (async () => {
+    throw new Error("offline");
+  }) as typeof fetch;
+  assert.equal(await lookupZip("1 Nowhere", none), null);
+  assert.equal(await lookupZip("1 Nowhere", boom), null);
+});
+
+test("raw payloads drop owner, applicant, phone and email fields", async () => {
+  const { redactRaw } = await import("../src/lib/ingest/normalize");
+  const kept = redactRaw({
+    permit_number: "X1",
+    property_owner_name: "A PERSON",
+    parcel_owner_name: "A PERSON",
+    applicant: "A PERSON",
+    contractor_phone: "(000) 000-0000",
+    contractor_phone_number: "(000) 000-0000",
+    contractor_email: "a@example.invalid",
+    contractor_name: "SAMPLE CO",
+    job_value: 1,
+  });
+  assert.deepEqual(Object.keys(kept).sort(), ["contractor_name", "job_value", "permit_number"]);
+});

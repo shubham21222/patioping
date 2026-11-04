@@ -97,3 +97,12 @@ export function weeklyCounts(permits: NormalizedPermit[]) {
   }
   return [...weeks.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
+
+/**
+ * Raw payloads are kept for re-checking, minus personal details some portals publish:
+ * owner and applicant names, phones, emails. We never need them.
+ */
+const PERSONAL = /owner|applicant|phone|email|e_mail|contact_name/i;
+export function redactRaw(rec: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(rec).filter(([k]) => !PERSONAL.test(k)));
+}

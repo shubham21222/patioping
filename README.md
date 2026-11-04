@@ -95,14 +95,18 @@ Official open-data APIs only (Socrata SODA, ArcGIS REST), no scraping behind log
 src/lib/ingest/
   configs.ts     source registry: endpoint, dataset id, field mapping (single source of truth)
   sources.ts     Socrata + ArcGIS connectors (paging, retries on 429/5xx, polite delays) + discover
-  normalize.ts   raw record → permits row, keyword classifier, weekly counts
+  normalize.ts   raw record → permits row, keyword classifier, weekly counts, PII redaction
+  enrich.ts      fills missing zips from the US Census Geocoder (Mesa, Orlando have no zip column)
   run.ts         store permits + raw payloads, match leads, record source health
 scripts/ingest.ts           CLI
 workers/ingest/             Cloudflare cron Worker (daily 09:15 UTC)
 supabase/migrations/…_ingest.sql   match_leads(), territory backfill trigger, health columns
 ```
 
-Only pool, spa, fence and outdoor permits are stored; everything else is dropped.
+Only pool, spa, fence and outdoor permits are stored; everything else is dropped. Raw payloads are stored
+without owner/applicant names, phones or emails.
+
+Sources: Austin (`3syk-w9eu`), Orlando (`ryhf-m453`), Mesa (`dzpk-hxfb`), Scottsdale (layer URL still needed).
 
 ```bash
 npm run ingest -- discover austin             # real columns + sample rows: check the mapping

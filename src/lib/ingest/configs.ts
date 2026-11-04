@@ -64,14 +64,41 @@ export const SOURCES: SourceConfig[] = [
       description: "project_name",
       valuation: "estimated_cost",
       address: "permit_address",
-      // No zip column. Leads match on zip, so Orlando needs zip enrichment from
-      // geocoded_column before it can create leads; dry-run counts work without it.
+      // No zip column: filled by the Census geocoder in run.ts (enrichZips).
       lat: "geocoded_column.coordinates.1",
       lng: "geocoded_column.coordinates.0",
       contractor_name: "contractor",
       _query: { date_field: "issue_permit_date", where: "plan_review_type like 'Residential%'" },
     },
     coverage_note: "City of Orlando only (not unincorporated Orange County)",
+    verified: false,
+  },
+  {
+    key: "mesa",
+    name: "Mesa",
+    state: "AZ",
+    country: "US",
+    timezone: "America/Phoenix",
+    source_type: "socrata",
+    endpoint: "https://data.mesaaz.gov",
+    dataset_id: "dzpk-hxfb", // "Building Permits", Development Services
+    portal: "https://data.mesaaz.gov/d/dzpk-hxfb",
+    // Column names and meanings from the dataset's catalog entry (Nov 2026).
+    // Contractor email/phone and applicant names are published but deliberately not mapped.
+    field_mapping: {
+      permit_number: "permit_number",
+      issued_at: "issued_date",
+      permit_type: ["record_type", "type_of_work"],
+      description: ["description_of_work", "application_name"],
+      valuation: "job_value",
+      address: "property_address",
+      // No zip column: filled by the Census geocoder in run.ts (enrichZips).
+      lat: "latitude",
+      lng: "longitude",
+      contractor_name: "contractor_name",
+      _query: { date_field: "issued_date", where: "permit_type = 'RES'" },
+    },
+    coverage_note: "City of Mesa only",
     verified: false,
   },
   {
