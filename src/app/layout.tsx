@@ -1,20 +1,28 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  axes: ["wdth"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "PatioPing — New pool & backyard permit alerts for contractors",
+  title: "PatioPing · New pool permit alerts for pool service companies",
   description:
-    "Daily alerts for new pool and backyard building permits in your area, with a built-in CRM to turn them into customers.",
+    "Every new pool permit in your zip codes, in your inbox at 7 AM, with a simple pipeline to turn them into service accounts.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://patioping.com"),
+  openGraph: { images: ["/brand/patioping-logo.png"] },
 };
+
+export const viewport: Viewport = { themeColor: "#0b3b66" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} antialiased`}>{children}</body>
+    <html lang="en" className={archivo.variable}>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

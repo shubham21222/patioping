@@ -38,7 +38,7 @@ export async function signup(formData: FormData) {
     },
   });
   if (error) redirect(`/signup?error=${encodeURIComponent(error.message)}`);
-  redirect("/signup?sent=1");
+  redirect(`/signup?sent=1&email=${encodeURIComponent(String(formData.get("email")))}`);
 }
 
 export async function magicLink(formData: FormData) {

@@ -1,12 +1,21 @@
 # Copy to .env.local (for `next dev`) and .dev.vars (for `npm run preview`)
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://ofunawvwvunlzbnmkqav.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-or-publishable-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
-# Server-only (set in Cloudflare with `npx wrangler secret put NAME`)
+# Server-only (in production: `npx wrangler secret put NAME`)
 SUPABASE_SERVICE_ROLE_KEY=
+
+# Whop payments
+WHOP_API_KEY=
+WHOP_WEBHOOK_SECRET=
+WHOP_PLAN_STARTER=plan_xxxxxxxxxxxxx
+WHOP_PLAN_GROWTH=plan_xxxxxxxxxxxxx
+WHOP_PLAN_PRO=plan_xxxxxxxxxxxxx
+# "sandbox" to use sandbox-api.whop.com while testing
+WHOP_ENV=production
+
+# Later phases
 ANTHROPIC_API_KEY=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
 RESEND_API_KEY=
 SOCRATA_APP_TOKEN=

@@ -1,22 +1,96 @@
 @import "tailwindcss";
 
+/*
+  Waterline. Deep pool water for the hero, a waterline tile band,
+  pale concrete deck for everything people work in.
+  Theme: light. Pool techs read this on a phone in full sun.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
+  --deep: #0b3b66;        /* pool floor at 6 ft */
+  --deep-2: #0a2f52;
+  --water: #1f7fc1;       /* primary action */
+  --water-hover: #176aa3;
+  --aqua: #5cc6f0;        /* ripple, on deep only */
+  --deck: #f3f5f7;        /* concrete coping */
+  --deck-2: #e7ebef;
+  --line: #d5dce3;
+  --ink: #0e1c2b;
+  --ink-2: #44566a;       /* 7.4:1 on white */
+  --ink-3: #66788b;       /* 4.6:1 on white */
+  --sun: #f2b01e;         /* high-value only */
+  --sun-ink: #6b4500;
+  --danger: #b4232f;
+  --on-deep-2: #b9d3ea;   /* secondary text on deep, 8:1 */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-pool: #0ea5e9;
-  --color-pool-dark: #0369a1;
-  --color-teal: #14b8a6;
-  --color-sun: #f59e0b;
-  --font-sans: var(--font-inter);
+  --color-deep: var(--deep);
+  --color-deep-2: var(--deep-2);
+  --color-water: var(--water);
+  --color-water-hover: var(--water-hover);
+  --color-aqua: var(--aqua);
+  --color-deck: var(--deck);
+  --color-deck-2: var(--deck-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-sun: var(--sun);
+  --color-sun-ink: var(--sun-ink);
+  --color-danger: var(--danger);
+  --color-on-deep-2: var(--on-deep-2);
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  color-scheme: light;
+  scrollbar-color: var(--line) transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  caret-color: var(--water);
+}
+
+::selection { background: var(--aqua); color: var(--deep-2); }
+
+:focus-visible {
+  outline: 2px solid var(--water);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+a { text-underline-offset: 0.2em; text-decoration-thickness: 1px; }
+
+h1, h2, h3 { text-wrap: balance; letter-spacing: -0.02em; }
+p { text-wrap: pretty; }
+
+/* Depth-marker lettering: the tile numerals painted on pool coping */
+.marker {
+  font-stretch: 75%;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 0.9;
+}
+
+.num { font-variant-numeric: tabular-nums; }
+
+/* One authored moment: the ping ripple, played once on the hero mark */
+@keyframes ripple {
+  from { transform: scale(0.35); opacity: 0.9; }
+  to { transform: scale(1); opacity: 0; }
+}
+.ripple {
+  transform-origin: center;
+  animation: ripple 2.4s var(--ease-out-expo) 0.3s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ripple { animation: none; opacity: 0; }
 }

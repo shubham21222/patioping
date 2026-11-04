@@ -11,6 +11,7 @@
   "observability": { "enabled": true },
   // Public vars (safe to commit). Secrets go via `wrangler secret put`.
   "vars": {
-    "NEXT_PUBLIC_SITE_URL": "https://patioping.com"
+    "NEXT_PUBLIC_SITE_URL": "https://patioping.com",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://ofunawvwvunlzbnmkqav.supabase.co"
   }
 }

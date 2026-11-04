@@ -4,7 +4,7 @@
 
 **Tagline:** New pool & backyard permit alerts for contractors
 **Domain:** PatioPing.com
-**Stack:** Next.js (Cloudflare Workers via OpenNext) + Supabase (Auth + Postgres) + Claude API (Haiku) + Stripe + Resend (email)
+**Stack:** Next.js (Cloudflare Workers via OpenNext) + Supabase (Auth + Postgres) + Claude API (Haiku) + Whop (payments) + Resend (email)
 
 ---
 
@@ -69,7 +69,7 @@
 - [ ] Leads ki list + filters + lead detail page
 - [ ] Basic CRM (section 4 dekho)
 - [ ] CSV export
-- [ ] Stripe billing + 7 din free trial
+- [x] Whop billing (checkout + webhook) + 7 din free trial — scaffolded
 
 **Baad mein (customer demand pe):**
 - [ ] Map view
@@ -176,7 +176,7 @@
 - Territory ke saare leads pins mein, color = status
 
 **7. Settings**
-- Territories, alert preferences, team members, billing (Stripe Customer Portal)
+- Territories, alert preferences, team members, billing (Whop checkout, cancel from Whop account)
 
 ### Daily alert email design
 ```
@@ -308,7 +308,8 @@ permits           id, jurisdiction_id, permit_number, permit_type, description,
                   source_url, ai_score, created_at
                   UNIQUE(jurisdiction_id, permit_number)
 
-orgs              id, name, trade, plan, stripe_customer_id, created_at
+orgs              id, name, trade, plan, plan_status, whop_membership_id,
+                  whop_user_id, current_period_end, created_at
 users             id, org_id, email, role (owner/member)
 territories       id, org_id, type (zip/radius), zips[], center_lat, center_lng, radius_km
 

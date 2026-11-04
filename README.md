@@ -2,7 +2,7 @@
 
 New pool & backyard permit alerts for contractors. Full product plan: [`docs/PLAN.md`](docs/PLAN.md).
 
-**Stack:** Next.js 15 (App Router) · Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare) · Supabase (Auth + Postgres) · Tailwind CSS v4
+**Stack:** Next.js 15 (App Router) · Cloudflare Workers via [OpenNext](https://opennext.js.org/cloudflare) · Supabase (Auth + Postgres) · Whop (payments) · Tailwind CSS v4
 
 ## Structure
 
@@ -14,9 +14,15 @@ src/
     auth/callback         PKCE code exchange (email confirm, magic link, OAuth)
     auth/confirm          token_hash verification (custom email templates)
     auth/signout          POST → sign out
-    leads/                Leads inbox (protected)
-    onboarding/           Onboarding (protected, Phase 2)
-  lib/supabase/           Browser, server and middleware clients (@supabase/ssr)
+    (app)/                Signed-in app (shared shell)
+      leads/              Leads inbox, lead detail, CSV export
+      onboarding/         Trade, zip codes, alert time
+      settings/billing/   Plans + Whop checkout
+    api/webhooks/whop     Whop membership webhook → orgs.plan
+  lib/supabase/           Browser, server, middleware and service-role clients
+  lib/whop.ts             Checkout configuration + webhook verification
+  components/brand/       Logo, mark, waterline band
+public/brand/             Logo files (SVG + PNG)
   middleware.ts           Session refresh + route protection
 supabase/
   migrations/             Database schema + RLS
@@ -39,7 +45,15 @@ open-next.config.ts       OpenNext adapter config
 
 On signup, a database trigger automatically creates an `orgs` row and an owner `profiles` row.
 
-### 2. Local dev
+### 2. Whop (payments)
+1. In the Whop dashboard create a product with three monthly plans: Starter $49, Growth $149, Pro $299. Copy each `plan_…` id into `WHOP_PLAN_STARTER/GROWTH/PRO`.
+2. Create an API key → `WHOP_API_KEY`.
+3. Developer → Webhooks → Create webhook, API version **v1**, URL `https://patioping.com/api/webhooks/whop`, events `membership.activated`, `membership.deactivated`, `membership.updated`. Copy the `ws_…` secret → `WHOP_WEBHOOK_SECRET`.
+4. Run the second migration (`supabase/migrations/20261104010000_whop_billing.sql`).
+
+Checkout passes `org_id` and `plan` as metadata; the webhook reads them back and updates `orgs.plan` / `plan_status`. Users can't write billing columns themselves.
+
+### 3. Local dev
 ```bash
 cp .env.example .env.local     # fill in Supabase URL + anon key
 cp .dev.vars.example .dev.vars # same values, used by `npm run preview`
@@ -47,7 +61,7 @@ npm install
 npm run dev
 ```
 
-### 3. Deploy to Cloudflare
+### 4. Deploy to Cloudflare
 ```bash
 npx wrangler login
 npm run deploy
@@ -56,6 +70,9 @@ npm run deploy
 Server-only secrets:
 ```bash
 npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+npx wrangler secret put WHOP_API_KEY
+npx wrangler secret put WHOP_WEBHOOK_SECRET
+npx wrangler secret put WHOP_PLAN_STARTER   # and _GROWTH, _PRO
 ```
 
 Custom domain: Cloudflare dashboard → Workers → patioping → Settings → Domains & Routes → add `patioping.com`.
@@ -67,3 +84,7 @@ Custom domain: Cloudflare dashboard → Workers → patioping → Settings → D
 | `npm run preview` | Build with OpenNext and run in local Workers runtime |
 | `npm run deploy` | Build and deploy to Cloudflare |
 | `npm run cf-typegen` | Generate `cloudflare-env.d.ts` for bindings |
+
+## Design
+
+Direction "Waterline": deep pool water for the hero, a mosaic waterline band, pale concrete deck for working screens, depth-marker numerals (Archivo, semi-condensed) for counts and prices. Sun yellow marks high-value leads only. Light theme because pool techs use it on a phone in full sun.
