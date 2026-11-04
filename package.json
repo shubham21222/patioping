@@ -11,7 +11,10 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "ingest": "tsx scripts/ingest.ts",
+    "test": "tsx --test tests/*.test.ts",
+    "ingest:deploy": "wrangler deploy --config workers/ingest/wrangler.jsonc"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -33,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.29",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "wrangler": "^4.157.0"
   }

@@ -1,0 +1,16 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "patioping-ingest",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // 09:15 UTC = 4:15 AM Central / 2:15 AM Arizona: after portals refresh overnight,
+  // well before the 7 AM alerts.
+  "triggers": { "crons": ["15 9 * * *"] },
+  "limits": { "cpu_ms": 300000 },
+  "observability": { "enabled": true },
+  "vars": { "SUPABASE_URL": "https://ofunawvwvunlzbnmkqav.supabase.co" }
+  // Secrets: npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config workers/ingest/wrangler.jsonc
+  //          npx wrangler secret put SOCRATA_APP_TOKEN        --config workers/ingest/wrangler.jsonc
+  //          npx wrangler secret put INGEST_SECRET            --config workers/ingest/wrangler.jsonc
+}

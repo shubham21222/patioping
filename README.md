@@ -87,6 +87,36 @@ Custom domain: Cloudflare dashboard → Workers → patioping → Settings → D
 | `npm run deploy` | Build and deploy to Cloudflare |
 | `npm run cf-typegen` | Generate `cloudflare-env.d.ts` for bindings |
 
+## Permit ingest (Phase 1)
+
+Official open-data APIs only (Socrata SODA, ArcGIS REST), no scraping behind logins.
+
+```
+src/lib/ingest/
+  configs.ts     source registry: endpoint, dataset id, field mapping (single source of truth)
+  sources.ts     Socrata + ArcGIS connectors (paging, retries on 429/5xx, polite delays) + discover
+  normalize.ts   raw record → permits row, keyword classifier, weekly counts
+  run.ts         store permits + raw payloads, match leads, record source health
+scripts/ingest.ts           CLI
+workers/ingest/             Cloudflare cron Worker (daily 09:15 UTC)
+supabase/migrations/…_ingest.sql   match_leads(), territory backfill trigger, health columns
+```
+
+Only pool, spa, fence and outdoor permits are stored; everything else is dropped.
+
+```bash
+npm run ingest -- discover austin             # real columns + sample rows: check the mapping
+npm run ingest -- dry-run austin --days 90    # weekly counts, no database: Phase 0 go/no-go
+npm run ingest -- sync-config                 # write configs.ts into jurisdictions
+npm run ingest -- run austin --days 90        # backfill into Supabase and create leads
+npm run ingest:deploy                         # deploy the daily cron Worker
+npm test                                      # pipeline tests (synthetic fixtures)
+```
+
+Adding a source: add it to `configs.ts`, run `discover`, fix the mapping, `dry-run`, then `sync-config` and
+`update jurisdictions set status = 'active' where name = '…'`. A source that throws is marked `failing` with
+`last_error`; `last_synced_at` and `last_fetched_count` show health.
+
 ## Design
 
 Direction "Hill Country mist": pale sky ground, layered blue ridges, white working surfaces. Geist for UI, Instrument Serif italic for one accent word per heading. One blue (`--water`) for actions; sun amber marks high-value leads only. Tokens live in `src/app/globals.css`.
