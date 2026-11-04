@@ -351,15 +351,21 @@ postcards         id, lead_id, provider_id, status, cost, sent_at      (Phase 4)
 
 | Plan | Price | Kya milega |
 |---|---|---|
-| Starter | $49/mo | 1 county, daily email alerts, basic CRM, CSV |
-| Growth | $149/mo | 3 counties, team access, ROI dashboard |
-| Pro | $299/mo | Unlimited territory, priority sources, API/webhook |
+| Starter | $49/mo | 1 county, 1 user, daily 7 AM alert, pipeline + notes + follow-ups, CSV |
+| Growth | $149/mo | Starter + 3 counties, 3 team members, lead assignment, monthly ROI report |
+| Pro | $299/mo | Growth + unlimited counties, unlimited team, webhook/Zapier export, priority new sources |
 | Postcards | Per postcard | Print + postage + markup (Phase 4) |
 
-- 7 din ka free trial
+- 7 din ka free trial, app ke andar (signup pe card nahi maangte; trial ke baad plan chunne pe checkout)
 - Annual plan pe 2 mahine free
+- **Founding member:** pehle 50 customers ka price lifetime lock (jab tak subscription chalu hai)
+- Checkout: Whop (copy mein sirf "Secure checkout", Whop ka naam nahi). Alternatives agar zaroorat pade: Paddle, Dodo Payments (merchant of record, US sales tax handle karte hain)
+- ⚠️ Team seats, lead assignment, ROI report aur webhook/Zapier abhi bane nahi hain. Pricing mein listed hain, toh Growth/Pro ka pehla customer aane se pehle banana hoga.
 
----
+### Coverage honesty
+- Miami-Dade aur Maricopa: sirf unincorporated areas (City of Miami, Phoenix, Mesa city ke andar wale permits nahi)
+- Los Angeles: builder/contractor column publish nahi hota
+- Landing ka zip box `zip_preview()` se real 30-din count dikhata hai; data nahi mila toh "Request your county" form (`coverage_requests` table)
 
 ## 8. Kya track karna hai
 

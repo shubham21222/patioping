@@ -42,6 +42,19 @@ export async function createCheckout(opts: {
   return body.purchase_url;
 }
 
+/** Stop renewal; access stays until the current period ends. */
+export async function cancelAtPeriodEnd(membershipId: string) {
+  const key = process.env.WHOP_API_KEY;
+  if (!key) throw new Error("WHOP_API_KEY is not set");
+  const res = await fetch(`${API_BASE}/memberships/${encodeURIComponent(membershipId)}/cancel`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ cancel_at_period_end: true, reason: "Canceled from PatioPing billing page" }),
+  });
+  if (!res.ok) throw new Error(`Whop cancel failed (${res.status}): ${await res.text()}`);
+  return (await res.json()) as { status: string; current_period_end: string | null };
+}
+
 /**
  * Verify a Whop webhook (Standard Webhooks). Whop HMACs with the literal bytes of the
  * `ws_…` secret, while `standardwebhooks` base64-decodes its key, so encode it first.

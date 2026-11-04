@@ -2,8 +2,8 @@ import { Check } from "lucide-react";
 import { Notice } from "@/components/AuthCard";
 import { SubmitButton } from "@/components/SubmitButton";
 import { getSession } from "@/lib/session";
-import { PLANS } from "@/lib/plans";
-import { startCheckout } from "./actions";
+import { FOUNDING, PLANS } from "@/lib/plans";
+import { cancelPlan, startCheckout } from "./actions";
 
 const STATUS: Record<string, string> = {
   trialing: "Free week",
@@ -27,7 +27,10 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       <div className="mt-6 max-w-3xl">
         {error && <Notice tone="error">{error}</Notice>}
         {status === "success" && (
-          <Notice tone="info">Payment received. Your plan updates here within a minute of Whop confirming it.</Notice>
+          <Notice tone="info">Payment received. Your plan updates here within a minute, once the payment is confirmed.</Notice>
+        )}
+        {status === "canceled" && (
+          <Notice tone="info">Your plan is canceled. You keep access until the end of the period you paid for.</Notice>
         )}
       </div>
 
@@ -41,7 +44,9 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           <dd className="mt-1 text-lg font-medium">{STATUS[org?.plan_status ?? "trialing"] ?? org?.plan_status}</dd>
         </div>
         <div className="bg-white p-5">
-          <dt className="text-sm text-ink-2">{org?.plan === "trial" ? "Free week ends" : "Renews"}</dt>
+          <dt className="text-sm text-ink-2">
+            {org?.plan === "trial" ? "Free week ends" : org?.plan_status === "canceling" ? "Access until" : "Renews"}
+          </dt>
           <dd className="num mt-1 text-lg font-medium">
             {periodEnd ? new Date(periodEnd).toLocaleDateString("en-US", { dateStyle: "medium" }) : "—"}
           </dd>
@@ -49,7 +54,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       </dl>
 
       <h2 className="mt-12 text-xl font-medium">{current ? "Change plan" : "Choose a plan"}</h2>
-      <p className="mt-1 text-ink-2">Checkout is handled by Whop. Cancel any time from your Whop account.</p>
+      <p className="mt-1 text-ink-2">Secure checkout. Cancel any time from this page. {FOUNDING.line}</p>
 
       <div className="mt-6 grid overflow-hidden rounded-[22px] border border-white bg-white shadow-[var(--shadow-card)] lg:grid-cols-3">
         {PLANS.map((p, i) => {
@@ -66,7 +71,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
                 <span className="marker text-4xl">${p.price}</span>
                 <span className="text-ink-3">/ month</span>
               </p>
-              <ul className="mt-5 flex-1 space-y-2 text-[15px]">
+              {p.includes && <p className="mt-4 text-xs font-medium text-ink-3">Everything in {p.includes}, plus:</p>}
+              <ul className={`${p.includes ? "mt-2" : "mt-5"} flex-1 space-y-2 text-[15px]`}>
                 {p.features.map((f) => (
                   <li key={f} className="flex gap-2">
                     <Check size={17} strokeWidth={2.5} className="mt-0.5 shrink-0 text-water" />
@@ -89,6 +95,15 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           );
         })}
       </div>
+      {role === "owner" && org?.whop_membership_id && org.plan !== "trial" && !["canceling", "canceled"].includes(org.plan_status) && (
+        <form action={cancelPlan} className="mt-10 flex max-w-3xl flex-col gap-4 rounded-[22px] border border-white bg-white p-5 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-medium">Cancel plan</h2>
+            <p className="mt-1 text-sm text-ink-2">Alerts keep coming until the end of the period you&rsquo;ve paid for.</p>
+          </div>
+          <SubmitButton variant="quiet" pendingLabel="Canceling…" className="sm:w-auto">Cancel at period end</SubmitButton>
+        </form>
+      )}
     </div>
   );
 }

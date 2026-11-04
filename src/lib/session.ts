@@ -11,6 +11,7 @@ export type Org = {
   plan_status: string;
   trial_ends_at: string | null;
   current_period_end: string | null;
+  whop_membership_id: string | null;
   alert_hour_local: number;
   timezone: string;
 };
@@ -25,7 +26,7 @@ export const getSession = cache(async (next = "/leads") => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, orgs(id, name, trade, plan, plan_status, trial_ends_at, current_period_end, alert_hour_local, timezone)")
+    .select("role, orgs(id, name, trade, plan, plan_status, trial_ends_at, current_period_end, whop_membership_id, alert_hour_local, timezone)")
     .eq("id", user.id)
     .single();
 

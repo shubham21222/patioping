@@ -13,9 +13,7 @@ import {
 import { Mark } from "@/components/brand/Logo";
 import {
   ClosingBand,
-  CtaButton,
   DashboardPreview,
-  GhostButton,
   SampleAlert,
   SiteHeader,
   STAGE_STYLE,
@@ -25,11 +23,13 @@ import {
 import { PricingPicker } from "@/components/PricingPicker";
 import { SoonTrades } from "@/components/SoonTrades";
 import { TradeIcon } from "@/components/TradeIcon";
+import { ZipCheck } from "@/components/ZipCheck";
+import { FOUNDING } from "@/lib/plans";
 
 // Illustrative only: every sample is labeled as such where it renders.
 const sample: AlertItem[] = [
-  { addr: "4812 Ridgeview Dr", zip: "78745", work: "Pool + spa", value: 92000, builder: "Hill Country Pools", high: true },
-  { addr: "1907 Barton Hills Dr", zip: "78704", work: "Covered patio", value: 48000, builder: "Texas Outdoor Living" },
+  { addr: "4812 Ridgeview Dr", zip: "78745", work: "Pool + spa", value: 92000, builder: "Sample Pools Co.", high: true },
+  { addr: "1907 Barton Hills Dr", zip: "78704", work: "Covered patio", value: 48000, builder: "Example Outdoor Co." },
   { addr: "6203 Shadow Valley", zip: "78731", work: "Privacy fence", value: 9800, builder: "Owner-builder" },
 ];
 
@@ -46,7 +46,7 @@ const faqs = [
   },
   {
     q: "Which areas do you cover?",
-    a: "We're launching with Austin, Mesa, Los Angeles, Miami-Dade, Maricopa County and Nashville, then adding counties across Texas, Arizona and Florida.",
+    a: "We're launching with the cities of Austin, Mesa, Los Angeles and Nashville, plus unincorporated Miami-Dade and unincorporated Maricopa County. For those two counties we only get permits from the county itself, so addresses inside the City of Miami, Phoenix and other cities aren't included yet. Los Angeles doesn't publish builder names, so LA leads show address and value only. Type your zip at the top of the page to check, and if your county isn't covered, request it there.",
   },
   {
     q: "How do I cancel?",
@@ -67,14 +67,17 @@ export default function Home() {
               New <span className="accent">backyard</span> project alerts: pools, fences, patios and more.
             </h1>
             <p className="mx-auto mt-6 max-w-[56ch] text-lg text-ink-2">
-              We read city and county permit records overnight and email you the new projects in your zip codes at 7 AM.
-              Address, job value and builder, before anyone else calls.
+              We read city and county permit records overnight and email you new projects in your zip codes at 7 AM, the
+              morning after they&rsquo;re issued, while they&rsquo;re still fresh. Address and job value, plus the builder where the
+              city publishes it.
             </p>
-            <div className="mt-9 flex flex-wrap justify-center gap-3">
-              <GhostButton href="/#how">See how it works</GhostButton>
-              <CtaButton href="/signup">Start free week</CtaButton>
+            <div className="mt-9">
+              <ZipCheck />
             </div>
-            <p className="mt-3 text-sm text-ink-3">7 days free. No card needed.</p>
+            <p className="mt-4 text-sm text-ink-3">
+              See real permit counts for the last 30 days. 7 days free, no card needed.{" "}
+              <a href="#how" className="text-ink-2 underline hover:text-ink">How it works</a>
+            </p>
           </div>
 
           <div className="relative mx-auto mt-16 max-w-5xl px-4 sm:mt-20">
@@ -93,9 +96,13 @@ export default function Home() {
         <p className="text-sm text-ink-3">Launching with open permit data from</p>
         <ul className="mt-5 flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
           {SOURCES.map((s) => (
-            <li key={s} className="text-lg font-semibold tracking-tight text-[#4f7899]">{s}</li>
+            <li key={s} className="text-lg font-semibold tracking-tight text-[#4f7899]">
+              {s}
+              {s === "Miami-Dade" || s === "Maricopa County" ? <sup className="ml-0.5 text-xs">*</sup> : null}
+            </li>
           ))}
         </ul>
+        <p className="mt-4 text-xs text-ink-3">* Unincorporated areas only, not the cities inside the county.</p>
       </section>
 
       {/* ───── Trades ───── */}
@@ -313,8 +320,11 @@ export default function Home() {
             Simple pricing for <span className="accent">every</span> crew
           </h2>
           <p className="mx-auto mt-3 max-w-[50ch] text-ink-2">Every plan starts with 7 free days. Pay yearly and get 2 months free.</p>
+          <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#f3dca6] bg-sun-soft px-4 py-2 text-sm text-sun-ink">
+            <span className="font-medium">Founding member pricing</span> · {FOUNDING.line}
+          </p>
         </div>
-        <div className="mt-12">
+        <div className="mt-10">
           <PricingPicker />
         </div>
       </section>
@@ -345,7 +355,7 @@ export default function Home() {
       <ClosingBand
         title={
           <>
-            Ready to reach the homeowner <span className="accent">first</span>?
+            Reach the homeowner while the permit is <span className="accent">fresh</span>.
           </>
         }
       />

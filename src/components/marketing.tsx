@@ -84,9 +84,13 @@ export function DashboardPreview() {
   ];
   return (
     <div
-      aria-hidden="true"
-      className="rise grid grid-cols-[184px_1fr] overflow-hidden rounded-[22px] border border-white bg-white/90 text-left shadow-[var(--shadow-float)] backdrop-blur max-md:grid-cols-1"
+      role="img"
+      aria-label="Illustration of the PatioPing leads screen with sample data"
+      className="rise relative grid grid-cols-[184px_1fr] overflow-hidden rounded-[22px] border border-white bg-white/90 text-left shadow-[var(--shadow-float)] backdrop-blur max-md:grid-cols-1"
     >
+      <span className="absolute right-3 top-3 z-10 rounded-full border border-line bg-white/90 px-2.5 py-1 text-[11px] font-medium text-ink-3 sm:hidden">
+        Illustrative data
+      </span>
       <aside className="border-r border-line bg-deck/60 p-4 max-md:hidden">
         <Logo height={18} />
         <div className="mt-5 flex h-8 items-center gap-2 rounded-lg border border-line bg-white px-2.5 text-xs text-ink-3">
@@ -104,7 +108,10 @@ export function DashboardPreview() {
       <div className="min-w-0 p-4 sm:p-5">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs text-ink-3">Good morning, Mike</p>
+            <p className="flex items-center gap-2 text-xs text-ink-3">
+              Good morning, Mike
+              <span className="rounded-full border border-line px-2 py-0.5 text-[10px] font-medium max-sm:hidden">Illustrative data</span>
+            </p>
             <p className="mt-0.5 text-xl font-medium tracking-tight">5 new projects today</p>
           </div>
           <div className="flex gap-5 text-right max-sm:hidden">
@@ -200,7 +207,7 @@ export function SampleAlert({ subject, items }: { subject: string; items: AlertI
         </ol>
       </div>
       <figcaption className="border-t border-line bg-deck px-4 py-2 text-[11px] text-ink-3">
-        Sample alert. Addresses are illustrative.
+        Sample alert. Addresses and builders are illustrative. Builder shown where the city publishes it.
       </figcaption>
     </figure>
   );
@@ -247,7 +254,7 @@ export function ClosingBand({ title, href = "/signup" }: { title: React.ReactNod
       <section className="relative overflow-hidden">
         <div aria-hidden="true" className="absolute inset-0 bg-[url(/art/hills-band.webp)] bg-cover bg-bottom [mask-image:linear-gradient(to_bottom,transparent,black_35%)]" />
         <div className="relative mx-auto max-w-3xl px-4 pb-40 pt-28 text-center sm:pb-56">
-          <h2 className="text-4xl font-medium leading-[1.05] sm:text-[3.4rem]">{title}</h2>
+          <h2 className="text-4xl font-medium leading-[1.05] sm:text-[3.2rem]">{title}</h2>
           <p className="mt-4 text-ink-2">Start your free 7-day trial. No card needed.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <GhostButton href="/#pricing">See pricing</GhostButton>

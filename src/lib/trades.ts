@@ -49,12 +49,12 @@ export const LIVE_TRADES: LiveTrade[] = [
     exclude: ["carpool", "spanish", "spacing", "space"],
     pitch: {
       headline: "Every new pool in your zip codes, the morning it’s permitted.",
-      body: "By the time a pool is permitted, the homeowner has picked a builder. They haven’t picked who cleans it. That’s years of weekly service, and you hear about it first.",
+      body: "By the time a pool is permitted, the homeowner has picked a builder. They haven’t picked who cleans it. That’s years of weekly service, and you hear about it the morning after the permit is issued.",
       why: "New pools need weekly service, chemicals and repairs from the day they’re filled.",
     },
     examples: [
-      { work: "Pool + spa", value: 92000, builder: "Hill Country Pools" },
-      { work: "Pool", value: 61000, builder: "Blue Haven Pools" },
+      { work: "Pool + spa", value: 92000, builder: "Sample Pools Co." },
+      { work: "Pool", value: 61000, builder: "Example Pool Builders" },
       { work: "Spa", value: 18200, builder: "Owner-builder" },
     ],
   },
@@ -70,13 +70,13 @@ export const LIVE_TRADES: LiveTrade[] = [
     keywords: ["fence", "fencing", "privacy wall", "masonry wall", "screen wall", "garden wall"],
         pitch: {
       headline: "New fence permits in your area, every morning.",
-      body: "A fence permit means a homeowner is ready to spend, and new pools need a barrier by code. See the address, the builder and the value before the bids go out.",
+      body: "A fence permit means a homeowner is ready to spend, and new pools need a barrier by code. See the address and job value, plus the builder where the city publishes it, while the job is still fresh.",
       why: "Pool permits bring barrier and gate work with them. You get those too.",
     },
     examples: [
       { work: "Privacy fence, 180 ft", value: 9800, builder: "Owner-builder" },
-      { work: "Pool barrier fence", value: 6400, builder: "Lone Star Fence" },
-      { work: "Masonry screen wall", value: 14500, builder: "Cedar & Stone" },
+      { work: "Pool barrier fence", value: 6400, builder: "Sample Fence Co." },
+      { work: "Masonry screen wall", value: 14500, builder: "Example Masonry" },
     ],
   },
   {
@@ -92,13 +92,13 @@ export const LIVE_TRADES: LiveTrade[] = [
     exclude: ["parking deck", "roof deck"],
     pitch: {
       headline: "Patios, decks and pergolas, the morning they’re permitted.",
-      body: "Hardscape permits are the start of a backyard job, not the end. Plantings, lighting, irrigation and upkeep all come after. Be the first crew they hear from.",
+      body: "Hardscape permits are the start of a backyard job, not the end. Plantings, lighting, irrigation and upkeep all come after. Reach the homeowner while the project is still fresh.",
       why: "Every patio and pool needs planting, irrigation and lighting around it.",
     },
     examples: [
-      { work: "Covered patio + outdoor kitchen", value: 48000, builder: "Texas Outdoor Living" },
+      { work: "Covered patio + outdoor kitchen", value: 48000, builder: "Sample Outdoor Co." },
       { work: "Composite deck, 400 sq ft", value: 22500, builder: "Owner-builder" },
-      { work: "Retaining wall", value: 12800, builder: "Hill Country Hardscapes" },
+      { work: "Retaining wall", value: 12800, builder: "Example Hardscapes" },
     ],
   },
 ];

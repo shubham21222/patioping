@@ -75,7 +75,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
             name="zips"
             rows={3}
             required
-            defaultValue={territory?.zips?.join(", ") ?? ""}
+            defaultValue={territory?.zips?.join(", ") ?? (typeof user.user_metadata?.zip === "string" ? user.user_metadata.zip : "")}
             placeholder="78701, 78704, 78745"
             className={`${input} mt-4 h-auto py-3 leading-relaxed`}
             aria-describedby="zips-hint"

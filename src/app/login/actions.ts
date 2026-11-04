@@ -38,6 +38,7 @@ export async function signup(formData: FormData) {
       data: {
         company_name: String(formData.get("company") ?? ""),
         trade: isLiveTrade(formData.get("trade")) ? formData.get("trade") : "pool_service",
+        zip: /^\d{5}$/.test(String(formData.get("zip") ?? "")) ? String(formData.get("zip")) : null,
       },
     },
   });

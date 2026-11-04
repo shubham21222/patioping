@@ -9,9 +9,9 @@ import { signup } from "../login/actions";
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; sent?: string; email?: string; trade?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string; email?: string; trade?: string; zip?: string }>;
 }) {
-  const { error, sent, email, trade } = await searchParams;
+  const { error, sent, email, trade, zip } = await searchParams;
   const picked = tradeById(trade ?? "");
 
   if (sent) {
@@ -45,6 +45,7 @@ export default async function SignupPage({
     >
       {error && <Notice tone="error">{error}</Notice>}
       <form action={signup} className="space-y-5">
+        {zip && /^\d{5}$/.test(zip) && <input type="hidden" name="zip" value={zip} />}
         <div>
           <label htmlFor="trade" className={label}>Your trade</label>
           <select id="trade" name="trade" defaultValue={picked?.id ?? "pool_service"} className={input}>
@@ -55,11 +56,11 @@ export default async function SignupPage({
         </div>
         <div>
           <label htmlFor="company" className={label}>Company name</label>
-          <input id="company" className={input} name="company" placeholder="Blue Water Pool Service" required autoComplete="organization" />
+          <input id="company" className={input} name="company" placeholder="Your company name" required autoComplete="organization" />
         </div>
         <div>
           <label htmlFor="email" className={label}>Work email</label>
-          <input id="email" className={input} name="email" type="email" placeholder="mike@bluewaterpools.com" required autoComplete="email" />
+          <input id="email" className={input} name="email" type="email" placeholder="you@company.com" required autoComplete="email" />
         </div>
         <div>
           <label htmlFor="password" className={label}>Password</label>

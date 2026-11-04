@@ -29,7 +29,7 @@ export default async function LoginPage({
         <input type="hidden" name="next" value={next ?? "/leads"} />
         <div>
           <label htmlFor="email" className={label}>Work email</label>
-          <input id="email" className={input} name="email" type="email" placeholder="mike@bluewaterpools.com" required autoComplete="email" />
+          <input id="email" className={input} name="email" type="email" placeholder="you@company.com" required autoComplete="email" />
         </div>
         <div>
           <label htmlFor="password" className={label}>Password</label>

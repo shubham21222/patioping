@@ -87,7 +87,7 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
           <ul className="mt-6 space-y-4">
             {[
               "Pick your zip codes once. Alerts arrive every morning at 7.",
-              "Open a lead to see the address, job value, builder and the public record.",
+              "Open a lead to see the address, job value, the public record, and the builder where the city publishes it.",
               "Mark it contacted, set a follow-up, or send the homeowner a postcard.",
               "Log what you won, and see what PatioPing brought in each month.",
             ].map((line) => (

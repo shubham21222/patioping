@@ -39,16 +39,17 @@ export function PricingPicker() {
                   <span className="num text-sm text-ink-2">${x.price}/mo</span>
                 </span>
                 <span className="mt-1 block pl-7 text-sm text-ink-2">{x.blurb}</span>
-                {on && (
-                  <ul className="mt-3 grid gap-1.5 pl-7 text-sm sm:grid-cols-2">
+                <span className="mt-3 block pl-7">
+                  {x.includes && <span className="mb-1.5 block text-xs font-medium text-ink-3">Everything in {x.includes}, plus:</span>}
+                  <span className="grid gap-1.5 text-sm sm:grid-cols-2">
                     {x.features.map((f) => (
-                      <li key={f} className="flex gap-2">
-                        <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0 text-water" />
+                      <span key={f} className="flex gap-2">
+                        <Check size={16} strokeWidth={2.5} className={`mt-0.5 shrink-0 ${on ? "text-water" : "text-ink-3"}`} />
                         {f}
-                      </li>
+                      </span>
                     ))}
-                  </ul>
-                )}
+                  </span>
+                </span>
               </label>
             );
           })}
@@ -81,7 +82,7 @@ export function PricingPicker() {
         </p>
         <p className="mt-1 h-5 text-sm text-white/80">{yearly ? `$${p.price * 10} billed yearly. 2 months free.` : "Billed monthly."}</p>
         <ul className="mt-6 space-y-2 text-sm">
-          {["7 days free, no card", "Cancel any time", "Checkout handled by Whop"].map((t) => (
+          {["7 days free, no card", "Cancel any time", "Secure checkout"].map((t) => (
             <li key={t} className="flex gap-2">
               <Check size={16} strokeWidth={2.5} className="mt-0.5 shrink-0" /> {t}
             </li>
