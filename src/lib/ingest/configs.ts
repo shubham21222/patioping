@@ -121,6 +121,41 @@ export const SOURCES: SourceConfig[] = [
     coverage_note: null,
     verified: false,
   },
+  // ── Apify stand-ins ──────────────────────────────────────────────────────────
+  // For cities without a working official source. Create a task for the actor in the
+  // Apify console, schedule it daily, put its id in `task`, run `discover <key>` to see
+  // the real field names, then fix the mapping below. Skipped automatically while the
+  // city's official source is active, so leads are never duplicated.
+  {
+    key: "austin-apify",
+    name: "Austin (Apify)",
+    state: "TX",
+    country: "US",
+    timezone: "America/Chicago",
+    source_type: "apify",
+    endpoint: "https://api.apify.com",
+    dataset_id: null,
+    portal: "https://apify.com/loomwise/city-building-permits/examples/swimming-pool-permits",
+    field_mapping: {
+      // Placeholder field names: replace after `discover austin-apify`.
+      permit_number: "permit_number",
+      issued_at: "issue_date",
+      permit_type: "permit_type",
+      description: "description",
+      valuation: "valuation",
+      address: "address",
+      zip: "zip",
+      lat: "latitude",
+      lng: "longitude",
+      contractor_name: "contractor",
+      _query: {
+        date_field: "issue_date",
+        apify: { task: "", filter: { field: "city", in: ["Austin"] } },
+      },
+    },
+    coverage_note: null,
+    verified: false,
+  },
 ];
 
 export const sourceByKey = (key: string) => SOURCES.find((s) => s.key === key.toLowerCase());

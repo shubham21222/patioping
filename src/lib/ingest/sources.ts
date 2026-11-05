@@ -85,9 +85,54 @@ export async function fetchArcgis(j: Jurisdiction, opts: FetchOptions): Promise<
   return out;
 }
 
+const APIFY = "https://api.apify.com/v2";
+
+function apifyUrl(j: Jurisdiction, limit?: number) {
+  const a = j.field_mapping._query.apify;
+  const qs = new URLSearchParams({ clean: "true", format: "json" });
+  if (limit) qs.set("limit", String(limit));
+  if (a?.task) {
+    qs.set("status", "SUCCEEDED");
+    return { method: "GET" as const, url: `${APIFY}/actor-tasks/${encodeURIComponent(a.task)}/runs/last/dataset/items?${qs}` };
+  }
+  if (a?.actor) {
+    return { method: "POST" as const, url: `${APIFY}/acts/${encodeURIComponent(a.actor)}/run-sync-get-dataset-items?${qs}`, body: JSON.stringify(a.input ?? {}) };
+  }
+  throw new Error(`${j.name}: Apify source needs _query.apify.task or _query.apify.actor`);
+}
+
+/**
+ * Apify: read a scheduled task's last successful dataset (or run an actor), then keep the
+ * items for this jurisdiction and issued on/after `since`. Date filtering is client-side
+ * because each actor shapes its output differently.
+ */
+export async function fetchApify(j: Jurisdiction, opts: FetchOptions): Promise<RawRecord[]> {
+  if (!opts.apifyToken) throw new Error(`${j.name}: set APIFY_TOKEN to use an Apify source`);
+  const f = opts.fetchImpl ?? fetch;
+  const req = apifyUrl(j, opts.maxRecords);
+  const res = await f(req.url, {
+    method: req.method,
+    // Token in a header, not the URL, so it never lands in logs.
+    headers: { Accept: "application/json", "Content-Type": "application/json", "User-Agent": UA, Authorization: `Bearer ${opts.apifyToken}` },
+    body: req.body,
+  });
+  if (!res.ok) throw new Error(`${j.name}: Apify ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const items = (await res.json()) as RawRecord[];
+
+  const { date_field, apify } = j.field_mapping._query;
+  const wanted = apify?.filter?.in.map((v) => v.toLowerCase());
+  return items.filter((it) => {
+    if (wanted && !wanted.includes(String(it[apify!.filter!.field] ?? "").toLowerCase())) return false;
+    const d = it[date_field];
+    const iso = typeof d === "number" ? new Date(d).toISOString() : String(d ?? "");
+    return iso.slice(0, 10) >= opts.since;
+  });
+}
+
 export function fetchSource(j: Jurisdiction, opts: FetchOptions) {
   if (j.source_type === "socrata") return fetchSocrata(j, opts);
   if (j.source_type === "arcgis") return fetchArcgis(j, opts);
+  if (j.source_type === "apify") return fetchApify(j, opts);
   throw new Error(`${j.name}: source_type "${j.source_type}" has no connector yet`);
 }
 
@@ -126,6 +171,11 @@ export async function discover(j: Jurisdiction, opts: Omit<FetchOptions, "since"
       columns: meta.fields.map((f) => `${f.name} (${f.type}) — ${f.alias}`),
       sample: (sample.features ?? []).map((f) => f.attributes),
     };
+  }
+  if (j.source_type === "apify") {
+    const items = await fetchApify(j, { ...opts, since: "0000-00-00", maxRecords: 200 });
+    const keys = [...new Set(items.flatMap((it) => Object.keys(it)))];
+    return { name: j.name, updated: null, columns: keys.map((k) => `${k} (${typeof items.find((i) => i[k] != null)?.[k]})`), sample: items.slice(0, 3) };
   }
   throw new Error(`No discover for ${j.source_type}`);
 }

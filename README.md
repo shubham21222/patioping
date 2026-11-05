@@ -117,6 +117,22 @@ npm run ingest:deploy                         # deploy the daily cron Worker
 npm test                                      # pipeline tests (synthetic fixtures)
 ```
 
+### Apify stand-ins
+
+For a city without a working official API, an Apify actor can feed the same pipeline. Apify permits go
+through the same normalize → classify → zip → leads steps, so customers see them like any other lead.
+
+1. In the Apify console, create a **task** for the actor (e.g. the swimming-pool permits actor), set its input
+   to the cities you need, and schedule it daily, before 09:15 UTC.
+2. Put the task id in the city's `*-apify` entry in `configs.ts` (`_query.apify.task`) and set
+   `APIFY_TOKEN` (`.env.local`, and `wrangler secret put APIFY_TOKEN` for the Worker).
+3. `npm run ingest -- discover austin-apify` shows the actor's real field names; fix the mapping.
+4. `dry-run`, `sync-config`, then set the `… (Apify)` jurisdiction active.
+
+We read the task's **last successful run**, so our cron never starts extra paid runs. An Apify source is
+skipped automatically while the same city's official source is active, so leads are never duplicated.
+Check the actor's terms and per-result pricing before relying on it for paying customers.
+
 Adding a source: add it to `configs.ts`, run `discover`, fix the mapping, `dry-run`, then `sync-config` and
 `update jurisdictions set status = 'active' where name = '…'`. A source that throws is marked `failing` with
 `last_error`; `last_synced_at` and `last_fetched_count` show health.

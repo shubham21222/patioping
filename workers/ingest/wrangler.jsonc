@@ -12,5 +12,6 @@
   "vars": { "SUPABASE_URL": "https://ofunawvwvunlzbnmkqav.supabase.co" }
   // Secrets: npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config workers/ingest/wrangler.jsonc
   //          npx wrangler secret put SOCRATA_APP_TOKEN        --config workers/ingest/wrangler.jsonc
+  //          npx wrangler secret put APIFY_TOKEN              --config workers/ingest/wrangler.jsonc
   //          npx wrangler secret put INGEST_SECRET            --config workers/ingest/wrangler.jsonc
 }

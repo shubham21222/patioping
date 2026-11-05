@@ -7,6 +7,7 @@
  *   npm run ingest -- run [austin] [--days 7]    fetch, store, match leads (needs SUPABASE_SERVICE_ROLE_KEY)
  *
  * Reads .env.local if present. SOCRATA_APP_TOKEN is optional but avoids throttling.
+ * APIFY_TOKEN is needed for Apify sources.
  */
 import { createClient } from "@supabase/supabase-js";
 import { asJurisdiction, sourceByKey, SOURCES } from "../src/lib/ingest/configs";
@@ -28,6 +29,7 @@ const flag = (name: string, fallback: number) => {
 };
 const positional = rest.filter((a, i) => !a.startsWith("--") && !rest[i - 1]?.startsWith("--"));
 const appToken = process.env.SOCRATA_APP_TOKEN || undefined;
+const apifyToken = process.env.APIFY_TOKEN || undefined;
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
 
 function needSource(key?: string) {
@@ -36,8 +38,9 @@ function needSource(key?: string) {
     console.error(`Unknown source "${key ?? ""}". Known: ${SOURCES.map((x) => x.key).join(", ")}`);
     process.exit(1);
   }
-  if (!s.endpoint) {
-    console.error(`${s.name} has no endpoint yet. Portal: ${s.portal}`);
+  const apify = s.field_mapping._query.apify;
+  if (!s.endpoint || (s.source_type === "apify" && !apify?.task && !apify?.actor)) {
+    console.error(`${s.name} isn't configured yet (endpoint or Apify task/actor missing). See ${s.portal}`);
     process.exit(1);
   }
   return s;
@@ -57,7 +60,7 @@ async function main() {
   switch (cmd) {
     case "discover": {
       const s = needSource(positional[0]);
-      const info = await discover(asJurisdiction(s), { appToken });
+      const info = await discover(asJurisdiction(s), { appToken, apifyToken });
       console.log(`\n${info.name}  (updated ${info.updated ?? "?"})\n`);
       console.log(info.columns.join("\n"));
       console.log("\nSample rows:\n", JSON.stringify(info.sample, null, 2));
@@ -69,7 +72,7 @@ async function main() {
       const days = flag("days", 90);
       const j = asJurisdiction(s);
       console.log(`Fetching ${s.name} permits issued since ${daysAgo(days)}…`);
-      const raw = await fetchSource(j, { since: daysAgo(days), appToken, maxRecords: flag("max", 100_000) });
+      const raw = await fetchSource(j, { since: daysAgo(days), appToken, apifyToken, maxRecords: flag("max", 100_000) });
       const permits = raw.map((r) => normalize(j, r)).filter((p) => p !== null);
       const kept = permits.filter((p) => p.category !== "other");
       console.log(`${raw.length} residential permits, ${kept.length} pool/spa/fence/outdoor.\n`);
@@ -124,9 +127,9 @@ async function main() {
         const s = needSource(positional[0]);
         const { data, error } = await client.from("jurisdictions").select("*").eq("name", s.name).single();
         if (error || !data) throw new Error(`No jurisdictions row for ${s.name}. Run sync-config first.`);
-        console.log(await runSource(client, data as Jurisdiction, { lookbackDays: days, appToken }));
+        console.log(await runSource(client, data as Jurisdiction, { lookbackDays: days, appToken, apifyToken }));
       } else {
-        console.table(await runAll(client, { appToken }));
+        console.table(await runAll(client, { appToken, apifyToken }));
       }
       break;
     }

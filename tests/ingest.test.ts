@@ -190,3 +190,79 @@ test("raw payloads drop owner, applicant, phone and email fields", async () => {
   });
   assert.deepEqual(Object.keys(kept).sort(), ["contractor_name", "job_value", "permit_number"]);
 });
+
+test("Apify task: reads last successful run, token in header, filters city and date", async () => {
+  const { fetchApify } = await import("../src/lib/ingest/sources");
+  const j: Jurisdiction = {
+    id: "a",
+    name: "Austin (Apify)",
+    state: "TX",
+    source_type: "apify",
+    endpoint: "https://api.apify.com",
+    dataset_id: null,
+    status: "active",
+    field_mapping: {
+      permit_number: "permit_number",
+      issued_at: "issue_date",
+      description: "description",
+      zip: "zip",
+      _query: { date_field: "issue_date", apify: { task: "me~austin-pools", filter: { field: "city", in: ["Austin"] } } },
+    },
+  };
+  let seen: { url: URL; auth: string | null; method?: string } | null = null;
+  const fake = (async (u: string, init?: RequestInit) => {
+    seen = { url: new URL(u), auth: new Headers(init?.headers).get("authorization"), method: init?.method };
+    return new Response(
+      JSON.stringify([
+        { permit_number: "1", issue_date: "2026-11-01", city: "Austin", description: "New pool", zip: "78704" },
+        { permit_number: "2", issue_date: "2026-11-01", city: "Mesa", description: "New pool", zip: "85201" },
+        { permit_number: "3", issue_date: "2026-09-01", city: "austin", description: "New pool", zip: "78704" },
+      ]),
+    );
+  }) as typeof fetch;
+
+  const items = await fetchApify(j, { since: "2026-10-01", apifyToken: "secret", fetchImpl: fake });
+  assert.deepEqual(items.map((i) => i.permit_number), ["1"]);
+  assert.equal(seen!.url.pathname, "/v2/actor-tasks/me~austin-pools/runs/last/dataset/items");
+  assert.equal(seen!.url.searchParams.get("status"), "SUCCEEDED");
+  assert.equal(seen!.url.searchParams.get("token"), null, "token must not be in the URL");
+  assert.equal(seen!.auth, "Bearer secret");
+  assert.equal(normalize(j, items[0])!.category, "pool");
+});
+
+test("Apify actor mode POSTs the input; missing token fails clearly", async () => {
+  const { fetchApify } = await import("../src/lib/ingest/sources");
+  const j: Jurisdiction = {
+    id: "a", name: "Mesa (Apify)", state: "AZ", source_type: "apify", endpoint: "https://api.apify.com", dataset_id: null, status: "active",
+    field_mapping: { permit_number: "id", issued_at: "date", _query: { date_field: "date", apify: { actor: "someone/permits", input: { city: "Mesa" } } } },
+  };
+  let body = "";
+  const fake = (async (u: string, init?: RequestInit) => {
+    assert.ok(u.includes("/v2/acts/someone%2Fpermits/run-sync-get-dataset-items"));
+    assert.equal(init?.method, "POST");
+    body = String(init?.body);
+    return new Response("[]");
+  }) as typeof fetch;
+  await fetchApify(j, { since: "2026-10-01", apifyToken: "t", fetchImpl: fake });
+  assert.deepEqual(JSON.parse(body), { city: "Mesa" });
+  await assert.rejects(fetchApify(j, { since: "2026-10-01", fetchImpl: fake }), /APIFY_TOKEN/);
+});
+
+test("Apify stand-in is skipped while the city's official source is active", async () => {
+  const { skipDuplicates } = await import("../src/lib/ingest/run");
+  const mk = (name: string, source_type: Jurisdiction["source_type"]): Jurisdiction => ({
+    id: name, name, state: "TX", source_type, endpoint: "", dataset_id: null, status: "active",
+    field_mapping: { permit_number: "x", issued_at: "y", _query: { date_field: "y" } },
+  });
+  const r = skipDuplicates([mk("Austin", "socrata"), mk("Austin (Apify)", "apify"), mk("Dallas (Apify)", "apify")]);
+  assert.deepEqual(r.run.map((j) => j.name), ["Austin", "Dallas (Apify)"]);
+  assert.deepEqual(r.skipped, ["Austin (Apify)"]);
+});
+
+test("city pages: one per city, unconfigured Apify stand-ins add nothing", async () => {
+  const { CITIES } = await import("../src/lib/seo/cities");
+  const slugs = CITIES.map((c) => c.slug);
+  assert.equal(new Set(slugs).size, slugs.length);
+  assert.ok(slugs.includes("austin-tx"));
+  assert.equal(CITIES.find((c) => c.slug === "austin-tx")!.source.source_type, "socrata");
+});

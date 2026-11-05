@@ -24,7 +24,7 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString
 export async function runSource(
   db: SupabaseClient,
   j: Jurisdiction,
-  opts: { since?: string; lookbackDays?: number; appToken?: string; maxRecords?: number } = {},
+  opts: { since?: string; lookbackDays?: number; appToken?: string; apifyToken?: string; maxRecords?: number } = {},
 ): Promise<RunResult> {
   // Re-read a few days back every run: portals often publish permits late or edit them.
   const since = opts.since ?? daysAgo(opts.lookbackDays ?? 7);
@@ -32,7 +32,7 @@ export async function runSource(
   const startedAt = new Date().toISOString();
 
   try {
-    const raw = await fetchSource(j, { since, appToken: opts.appToken, maxRecords: opts.maxRecords });
+    const raw = await fetchSource(j, { since, appToken: opts.appToken, apifyToken: opts.apifyToken, maxRecords: opts.maxRecords });
     result.fetched = raw.length;
 
     const keep: { n: NormalizedPermit; raw: Record<string, unknown> }[] = [];
@@ -79,11 +79,30 @@ export async function runSource(
   return result;
 }
 
+/** "Austin (Apify)" → "Austin": Apify sources are named after the city they stand in for. */
+export const baseCity = (name: string) => name.replace(/\s*\(apify\)\s*$/i, "");
+
+/**
+ * Skip an Apify source when the same city already has an official source running:
+ * both would store the same permits under two jurisdictions and create duplicate leads.
+ */
+export function skipDuplicates(all: Jurisdiction[]) {
+  const official = new Set(all.filter((j) => j.source_type !== "apify").map((j) => `${baseCity(j.name)}|${j.state}`));
+  return {
+    run: all.filter((j) => j.source_type !== "apify" || !official.has(`${baseCity(j.name)}|${j.state}`)),
+    skipped: all.filter((j) => j.source_type === "apify" && official.has(`${baseCity(j.name)}|${j.state}`)).map((j) => j.name),
+  };
+}
+
 /** Every active source, one at a time (polite to the portals, simple to reason about). */
-export async function runAll(db: SupabaseClient, opts: { appToken?: string } = {}) {
+export async function runAll(db: SupabaseClient, opts: { appToken?: string; apifyToken?: string } = {}) {
   const { data, error } = await db.from("jurisdictions").select("*").in("status", ["active", "failing"]);
   if (error) throw new Error(`load jurisdictions: ${error.message}`);
+  const { run, skipped } = skipDuplicates((data ?? []) as Jurisdiction[]);
   const results: RunResult[] = [];
-  for (const j of (data ?? []) as Jurisdiction[]) results.push(await runSource(db, j, opts));
+  for (const j of run) results.push(await runSource(db, j, opts));
+  for (const name of skipped) {
+    results.push({ jurisdiction: name, fetched: 0, kept: 0, byCategory: {}, leadsCreated: 0, zipsFilled: 0, error: "skipped: official source for this city is active" });
+  }
   return results;
 }

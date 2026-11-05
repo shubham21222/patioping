@@ -27,6 +27,16 @@ export type FieldMapping = {
     where?: string;
     /** Template when the source has no URL column: {permit_number} is substituted */
     source_url_template?: string;
+    /** Apify only: where to read items from, and which of them belong to this jurisdiction */
+    apify?: {
+      /** Read the last successful run of a scheduled Apify task (recommended: no extra runs) */
+      task?: string;
+      /** Or run an actor synchronously with this input */
+      actor?: string;
+      input?: Record<string, unknown>;
+      /** Keep items whose field equals one of these values (case-insensitive), e.g. city = "Austin" */
+      filter?: { field: string; in: string[] };
+    };
   };
 };
 
@@ -34,7 +44,7 @@ export type Jurisdiction = {
   id: string;
   name: string;
   state: string;
-  source_type: "socrata" | "arcgis" | "scrape" | "planit";
+  source_type: "socrata" | "arcgis" | "apify" | "scrape" | "planit";
   /** Socrata: "https://data.austintexas.gov". ArcGIS: full layer URL ".../FeatureServer/0" */
   endpoint: string;
   /** Socrata 4x4 id like "3syk-w9eu"; unused for ArcGIS */
@@ -67,5 +77,6 @@ export type FetchOptions = {
   /** Hard cap on records per run, to stay polite */
   maxRecords?: number;
   appToken?: string;
+  apifyToken?: string;
   fetchImpl?: typeof fetch;
 };

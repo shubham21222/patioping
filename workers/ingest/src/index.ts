@@ -12,12 +12,13 @@ type Env = {
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   SOCRATA_APP_TOKEN?: string;
+  APIFY_TOKEN?: string;
   INGEST_SECRET?: string;
 };
 
 async function ingest(env: Env) {
   const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
-  const results = await runAll(db, { appToken: env.SOCRATA_APP_TOKEN });
+  const results = await runAll(db, { appToken: env.SOCRATA_APP_TOKEN, apifyToken: env.APIFY_TOKEN });
   for (const r of results) {
     // One structured line per source shows up in Workers observability.
     console.log(JSON.stringify({ event: "ingest", ...r }));
