@@ -82,7 +82,7 @@ export const LIVE_TRADES: LiveTrade[] = [
         pitch: {
       headline: "New fence permits in your area, every morning.",
       body: "A fence permit means a homeowner is ready to spend, and many local codes require a barrier around new pools. See the address and job value, plus the builder where the city publishes it, while the job is still fresh.",
-      why: "Many pool permits bring barrier and gate work with them. You see those too.",
+      why: "Fence permits are filed for the bigger jobs: tall privacy fences, masonry walls and pool barriers.",
     },
     examples: [
       { work: "Privacy fence, 180 ft", value: 9800, builder: "Owner-builder" },

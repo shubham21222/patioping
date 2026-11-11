@@ -5,7 +5,9 @@ import { Check } from "lucide-react";
 import { ClosingBand, CtaButton, GhostButton, SampleAlert, SiteHeader, TradeCards, type AlertItem } from "@/components/marketing";
 import { TradeIcon } from "@/components/TradeIcon";
 import { LIVE_TRADES, tradeBySlug } from "@/lib/trades";
-import { CITIES } from "@/lib/seo/cities";
+import { CITIES, SITE } from "@/lib/seo/cities";
+import { TRADE_SEO } from "@/lib/seo/trades";
+import { JsonLd } from "@/components/JsonLd";
 
 export const dynamicParams = false;
 
@@ -17,8 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ trade: st
   const t = tradeBySlug((await params).trade);
   if (!t) return {};
   // The root layout's title template adds "| PatioPing"; OpenGraph titles don't get the template.
-  const title = `New ${t.short} permit alerts for ${t.name.toLowerCase()} contractors`;
-  const description = `Every new ${t.short} permit in your zip codes, emailed at 7 AM with address, job value and builder. 7 days free.`;
+  const { title, description } = TRADE_SEO[t.id];
   return { title, description, alternates: { canonical: `/${t.slug}` }, openGraph: { title: `${title} · PatioPing`, description } };
 }
 
@@ -40,9 +41,39 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
   }));
   const signup = `/signup?trade=${t.id}`;
   const [lead, ...rest] = t.pitch.headline.split(" ");
+  const seo = TRADE_SEO[t.id];
+  const url = `${SITE}/${t.slug}`;
 
   return (
     <main className="bg-bg">
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "PatioPing", item: `${SITE}/` },
+              { "@type": "ListItem", position: 2, name: seo.eyebrow, item: url },
+            ],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: `${seo.eyebrow} from new permits`,
+            serviceType: seo.eyebrow,
+            description: seo.description,
+            url,
+            provider: { "@type": "Organization", name: "PatioPing", url: SITE },
+            areaServed: CITIES.map((c) => ({ "@type": "City", name: `${c.name}, ${c.state}` })),
+            offers: { "@type": "Offer", price: "49", priceCurrency: "USD", url: `${SITE}/#pricing` },
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: seo.faqs.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          },
+        ]}
+      />
       <section className="relative overflow-hidden">
         <div aria-hidden="true" className="absolute inset-0 bg-[url(/art/hills-hero.webp)] bg-cover bg-[center_top]" />
         <div className="relative pt-3 sm:pt-4">
@@ -50,7 +81,7 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
           <div className="mx-auto grid max-w-6xl gap-12 px-4 pb-28 pt-16 sm:px-6 sm:pt-24 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:pb-40">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-white bg-white/70 px-3 py-1.5 text-sm font-medium text-water backdrop-blur">
-                <TradeIcon name={t.icon} size={16} /> {t.name}
+                <TradeIcon name={t.icon} size={16} /> {seo.eyebrow}
               </p>
               <h1 className="mt-6 text-[2.5rem] font-medium leading-[1.04] sm:text-6xl">
                 <span className="accent">{lead}</span> {rest.join(" ")}
@@ -80,7 +111,10 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
               <li key={k} className="rounded-full border border-[#cfe3f1] bg-water-soft px-3 py-1.5 text-sm text-water">{k}</li>
             ))}
           </ul>
-          <p className="mt-5 text-sm text-ink-3">Vague descriptions get a second read before they reach you, so you don&rsquo;t chase interior remodels.</p>
+          <p className="mt-5 text-sm text-ink-3">
+            Matched as whole words, and we leave out permits where the keyword is incidental, like a new house that lists
+            a covered patio, so you don&rsquo;t chase jobs that aren&rsquo;t yours.
+          </p>
         </div>
         <div className="rounded-3xl border border-line bg-[#f2f7fa] p-6 sm:p-8">
           <h2 className="text-3xl font-medium leading-tight">
@@ -102,6 +136,31 @@ export default async function TradePage({ params }: { params: Promise<{ trade: s
             ))}
           </ul>
         </div>
+      </section>
+
+      <section className="mx-auto grid max-w-6xl gap-10 px-4 pt-24 sm:px-6 lg:grid-cols-[1fr_1.4fr]">
+        <div>
+          <h2 className="text-3xl font-medium leading-tight sm:text-4xl">
+            {seo.eyebrow}, <span className="accent">explained</span>
+          </h2>
+          <p className="mt-4 max-w-[52ch] text-ink-2">{seo.explainer}</p>
+          <p className="mt-4 text-ink-2">
+            Guide:{" "}
+            <Link href={`/guides/${seo.guide.slug}`} className="font-medium text-water underline">{seo.guide.label}</Link>
+          </p>
+          <p className="mt-3 text-sm text-ink-3">
+            More: <Link href="/guides" className="font-medium text-water underline">all guides</Link> ·{" "}
+            <Link href="/alternatives" className="font-medium text-water underline">permit lead tools compared</Link>
+          </p>
+        </div>
+        <dl className="space-y-6 rounded-3xl border border-line bg-white p-6 sm:p-8">
+          {seo.faqs.map((f) => (
+            <div key={f.q}>
+              <dt className="font-medium">{f.q}</dt>
+              <dd className="mt-1 text-ink-2">{f.a}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pt-24 sm:px-6">
