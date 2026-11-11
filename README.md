@@ -117,6 +117,19 @@ npm run ingest:deploy                         # deploy the daily cron Worker
 npm test                                      # pipeline tests (synthetic fixtures)
 ```
 
+### Daily lead alerts
+
+The same Worker runs an hourly cron (`0 * * * *`). For each org whose local time is its
+`alert_hour_local` (set in onboarding), it emails everyone in the org the leads created since the
+last alert (`src/lib/alerts/`). No new leads, no email. Trials stop getting alerts when the trial
+ends; paid plans always get them. Each send is logged in `alerts_log`.
+
+1. Resend → Domains → add `patioping.com`, add the DNS records it shows in Cloudflare, wait for "Verified".
+2. Resend → API Keys → create a "Sending access" key, then
+   `npx wrangler secret put RESEND_API_KEY --config workers/ingest/wrangler.jsonc`.
+3. `npm run ingest:deploy`. Sender and site URL are `ALERT_FROM` / `SITE_URL` in `workers/ingest/wrangler.jsonc`.
+4. Test by hand: `curl -X POST https://<worker>/alerts -H "Authorization: Bearer $INGEST_SECRET"` (sends only what's due this hour).
+
 ### Apify stand-ins
 
 For a city without a working official API, an Apify actor can feed the same pipeline. Apify permits go
