@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildDigest, hasAccess, isDue, localHour, type AlertLead, type AlertOrg } from "../src/lib/alerts/digest";
-import { runAlerts } from "../src/lib/alerts/send";
+import { runAlerts, type OutgoingEmail } from "../src/lib/alerts/send";
 
 const org = (o: Partial<AlertOrg> = {}): AlertOrg => ({
   id: "org-1",
@@ -113,43 +113,37 @@ test("runAlerts sends one email to the org's people and logs it", async () => {
     leads: [{ id: "lead-1", created_at: "2026-11-11T09:20:00Z", permits: lead("lead-1").permit }],
     profiles: [{ email: "owner@example.com", full_name: "Mike Smith", role: "owner" }, { email: "crew@example.com", full_name: null, role: "member" }],
   });
-  const calls: { body: Record<string, unknown>; headers: Record<string, string> }[] = [];
-  const fetchImpl = (async (_url: string, init: RequestInit) => {
-    calls.push({ body: JSON.parse(String(init.body)), headers: init.headers as Record<string, string> });
-    return new Response(JSON.stringify({ id: "email_1" }), { status: 200 });
-  }) as typeof fetch;
+  const calls: OutgoingEmail[] = [];
+  const mailer = async (msg: OutgoingEmail) => void calls.push(msg);
 
-  const res = await runAlerts(db, { resendKey: "re_test", from: "PatioPing <alerts@example.com>", siteUrl: "https://x", now: sevenCentral, fetchImpl });
+  const res = await runAlerts(db, { mailer, siteUrl: "https://x", now: sevenCentral });
   assert.deepEqual(res, [{ org: "Sample Pool Co", sent: 2, leads: 1 }]); // Later Co isn't due at 7
   assert.equal(calls.length, 1);
-  assert.deepEqual(calls[0].body.to, ["owner@example.com", "crew@example.com"]);
-  assert.equal(calls[0].body.subject, "1 new pool in your area");
-  assert.equal(calls[0].headers["Idempotency-Key"], "alert-org-1-2026-11-11T13");
+  assert.deepEqual(calls[0].to, ["owner@example.com", "crew@example.com"]);
+  assert.equal(calls[0].subject, "1 new pool in your area");
+  assert.match(calls[0].text, /^Good morning Mike,/);
   assert.equal(inserted.length, 1);
 });
 
 test("runAlerts sends nothing on a day with no new leads", async () => {
   const { db, inserted } = fakeDb({ orgs: [org()], lastSent: "2026-11-10T13:00:00Z", leads: [], profiles: [] });
   let called = false;
-  const res = await runAlerts(db, {
-    resendKey: "k", from: "f", siteUrl: "https://x", now: sevenCentral,
-    fetchImpl: (async () => ((called = true), new Response("{}"))) as typeof fetch,
-  });
+  const res = await runAlerts(db, { siteUrl: "https://x", now: sevenCentral, mailer: async () => void (called = true) });
   assert.deepEqual(res, [{ org: "Sample Pool Co", sent: 0, leads: 0 }]);
   assert.equal(called, false);
   assert.equal(inserted.length, 0);
 });
 
-test("a Resend failure is reported, not logged as sent", async () => {
+test("a send failure is reported, not logged as sent", async () => {
   const { db, inserted } = fakeDb({
     orgs: [org()], lastSent: null,
     leads: [{ id: "lead-1", created_at: "2026-11-11T09:20:00Z", permits: lead("lead-1").permit }],
     profiles: [{ email: "owner@example.com", full_name: null, role: "owner" }],
   });
   const res = await runAlerts(db, {
-    resendKey: "k", from: "f", siteUrl: "https://x", now: sevenCentral,
-    fetchImpl: (async () => new Response("domain not verified", { status: 403 })) as typeof fetch,
+    siteUrl: "https://x", now: sevenCentral,
+    mailer: async () => { throw new Error("Email Sending E_SENDER_NOT_VERIFIED: sender not verified"); },
   });
-  assert.match(res[0].error ?? "", /Resend 403: domain not verified/);
+  assert.match(res[0].error ?? "", /E_SENDER_NOT_VERIFIED/);
   assert.equal(inserted.length, 0);
 });

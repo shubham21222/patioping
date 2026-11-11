@@ -3,28 +3,15 @@ import { buildDigest, isDue, type AlertLead, type AlertOrg } from "./digest";
 
 export type AlertResult = { org: string; sent: number; leads: number; error?: string };
 
+export type OutgoingEmail = { to: string[]; subject: string; text: string; html: string };
+/** Sends one email or throws. The Worker passes Cloudflare Email Sending; tests pass a fake. */
+export type Mailer = (msg: OutgoingEmail) => Promise<void>;
+
 type Opts = {
-  resendKey: string;
-  /** e.g. "PatioPing <alerts@patioping.com>" (the domain must be verified in Resend) */
-  from: string;
+  mailer: Mailer;
   siteUrl: string;
   now?: Date;
-  fetchImpl?: typeof fetch;
 };
-
-async function sendEmail(o: Opts, to: string[], msg: { subject: string; text: string; html: string }, key: string) {
-  const res = await (o.fetchImpl ?? fetch)("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${o.resendKey}`,
-      "Content-Type": "application/json",
-      // Resend drops a repeat with the same key for 24h, so a retried cron can't double-send.
-      "Idempotency-Key": key,
-    },
-    body: JSON.stringify({ from: o.from, to, subject: msg.subject, text: msg.text, html: msg.html }),
-  });
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 300)}`);
-}
 
 /** Hourly: email each org whose local alert hour it is, with the leads created since its last alert. */
 export async function runAlerts(db: SupabaseClient, o: Opts): Promise<AlertResult[]> {
@@ -78,7 +65,8 @@ export async function runAlerts(db: SupabaseClient, o: Opts): Promise<AlertResul
       const firstName = owner?.full_name?.trim().split(/\s+/)[0] || null;
 
       const msg = buildDigest({ org, leads, firstName, siteUrl: o.siteUrl });
-      await sendEmail(o, to, msg, `alert-${org.id}-${now.toISOString().slice(0, 13)}`);
+      // Once per morning is enforced by alerts_log + isDue's 20-hour window.
+      await o.mailer({ to, ...msg });
       result.sent = to.length;
 
       const { error: logErr } = await db

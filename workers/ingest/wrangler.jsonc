@@ -9,15 +9,16 @@
   "triggers": { "crons": ["15 9 * * *", "0 * * * *"] },
   "limits": { "cpu_ms": 300000 },
   "observability": { "enabled": true },
+  // Daily alerts go out through Cloudflare Email Sending (patioping.com is onboarded).
+  "send_email": [{ "name": "EMAIL" }],
   "vars": {
     "SUPABASE_URL": "https://ofunawvwvunlzbnmkqav.supabase.co",
     "SITE_URL": "https://patioping.com",
-    // The domain must be verified in Resend (DNS records on Cloudflare).
-    "ALERT_FROM": "PatioPing <alerts@patioping.com>"
+    "ALERT_FROM": "alerts@patioping.com",
+    "ALERT_FROM_NAME": "PatioPing"
   }
   // Secrets: npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --config workers/ingest/wrangler.jsonc
   //          npx wrangler secret put SOCRATA_APP_TOKEN        --config workers/ingest/wrangler.jsonc
   //          npx wrangler secret put APIFY_TOKEN              --config workers/ingest/wrangler.jsonc
   //          npx wrangler secret put INGEST_SECRET            --config workers/ingest/wrangler.jsonc
-  //          npx wrangler secret put RESEND_API_KEY           --config workers/ingest/wrangler.jsonc
 }

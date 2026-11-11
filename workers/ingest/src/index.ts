@@ -13,6 +13,10 @@ import { runAll } from "../../../src/lib/ingest/run";
 // Minimal shapes of the Workers runtime objects we use (keeps the app's tsconfig free of workers-types).
 type Ctx = { waitUntil(p: Promise<unknown>): void };
 type ScheduledEvent = { cron: string };
+// Cloudflare Email Sending binding (`send_email` in wrangler.jsonc).
+type SendEmail = {
+  send(msg: { to: string[]; from: string | { email: string; name?: string }; subject: string; text: string; html: string }): Promise<{ messageId: string }>;
+};
 
 type Env = {
   SUPABASE_URL: string;
@@ -20,8 +24,10 @@ type Env = {
   SOCRATA_APP_TOKEN?: string;
   APIFY_TOKEN?: string;
   INGEST_SECRET?: string;
-  RESEND_API_KEY?: string;
+  EMAIL?: SendEmail;
+  /** Sender address on a domain onboarded to Email Sending */
   ALERT_FROM?: string;
+  ALERT_FROM_NAME?: string;
   SITE_URL?: string;
 };
 
@@ -40,14 +46,22 @@ async function ingest(env: Env) {
 }
 
 async function alerts(env: Env) {
-  if (!env.RESEND_API_KEY || !env.ALERT_FROM) {
-    console.log(JSON.stringify({ event: "alerts", skipped: "RESEND_API_KEY or ALERT_FROM not set" }));
+  const { EMAIL, ALERT_FROM } = env;
+  if (!EMAIL || !ALERT_FROM) {
+    console.log(JSON.stringify({ event: "alerts", skipped: "EMAIL binding or ALERT_FROM not set" }));
     return [];
   }
+  const from = { email: ALERT_FROM, name: env.ALERT_FROM_NAME ?? "PatioPing" };
   const results = await runAlerts(supabase(env), {
-    resendKey: env.RESEND_API_KEY,
-    from: env.ALERT_FROM,
     siteUrl: env.SITE_URL ?? "https://patioping.com",
+    mailer: async (msg) => {
+      try {
+        await EMAIL.send({ from, ...msg });
+      } catch (e) {
+        const code = (e as { code?: string }).code;
+        throw new Error(`Email Sending${code ? ` ${code}` : ""}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    },
   });
   for (const r of results) console.log(JSON.stringify({ event: "alert", ...r }));
   return results;

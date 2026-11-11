@@ -124,11 +124,13 @@ The same Worker runs an hourly cron (`0 * * * *`). For each org whose local time
 last alert (`src/lib/alerts/`). No new leads, no email. Trials stop getting alerts when the trial
 ends; paid plans always get them. Each send is logged in `alerts_log`.
 
-1. Resend → Domains → add `patioping.com`, add the DNS records it shows in Cloudflare, wait for "Verified".
-2. Resend → API Keys → create a "Sending access" key, then
-   `npx wrangler secret put RESEND_API_KEY --config workers/ingest/wrangler.jsonc`.
-3. `npm run ingest:deploy`. Sender and site URL are `ALERT_FROM` / `SITE_URL` in `workers/ingest/wrangler.jsonc`.
-4. Test by hand: `curl -X POST https://<worker>/alerts -H "Authorization: Bearer $INGEST_SECRET"` (sends only what's due this hour).
+Mail goes out through Cloudflare Email Sending (the `EMAIL` `send_email` binding, no API key).
+`patioping.com` is onboarded (`npx wrangler email sending list`); sender and site URL are
+`ALERT_FROM` / `SITE_URL` in `workers/ingest/wrangler.jsonc`. Test by hand:
+`curl -X POST https://<worker>/alerts -H "Authorization: Bearer $INGEST_SECRET"` (sends only what's due this hour).
+
+Supabase Auth email uses the same service over SMTP: host `smtp.mx.cloudflare.net`, port `465`,
+username `api_token`, password a Cloudflare API token with "Email Sending: Edit".
 
 ### Apify stand-ins
 
