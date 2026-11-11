@@ -35,13 +35,16 @@ export async function runSource(
     const raw = await fetchSource(j, { since, appToken: opts.appToken, apifyToken: opts.apifyToken, maxRecords: opts.maxRecords });
     result.fetched = raw.length;
 
-    const keep: { n: NormalizedPermit; raw: Record<string, unknown> }[] = [];
+    // Keyed by permit number: some portals publish one row per sub-permit or revision, and a
+    // single upsert can't touch the same (jurisdiction, permit_number) row twice. Last one wins.
+    const byNumber = new Map<string, { n: NormalizedPermit; raw: Record<string, unknown> }>();
     for (const r of raw) {
       const n = normalize(j, r);
       if (!n || n.category === "other") continue;
-      keep.push({ n, raw: redactRaw(r) });
-      result.byCategory[n.category] = (result.byCategory[n.category] ?? 0) + 1;
+      byNumber.set(n.permit_number, { n, raw: redactRaw(r) });
     }
+    const keep = [...byNumber.values()];
+    for (const { n } of keep) result.byCategory[n.category] = (result.byCategory[n.category] ?? 0) + 1;
     result.kept = keep.length;
 
     // Sources without a zip column (Mesa, Orlando): leads match on zip, so fill them in.
