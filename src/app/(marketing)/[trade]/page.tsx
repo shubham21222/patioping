@@ -16,9 +16,10 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ trade: string }> }): Promise<Metadata> {
   const t = tradeBySlug((await params).trade);
   if (!t) return {};
-  const title = `New ${t.short} permit alerts for ${t.name.toLowerCase()} contractors · PatioPing`;
+  // The root layout's title template adds "| PatioPing"; OpenGraph titles don't get the template.
+  const title = `New ${t.short} permit alerts for ${t.name.toLowerCase()} contractors`;
   const description = `Every new ${t.short} permit in your zip codes, emailed at 7 AM with address, job value and builder. 7 days free.`;
-  return { title, description, alternates: { canonical: `/${t.slug}` }, openGraph: { title, description } };
+  return { title, description, alternates: { canonical: `/${t.slug}` }, openGraph: { title: `${title} · PatioPing`, description } };
 }
 
 const ZIPS = ["78704", "78745", "78731"];
