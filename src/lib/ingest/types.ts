@@ -63,6 +63,9 @@ export type NormalizedPermit = {
   category: PermitCategory;
   valuation: number | null;
   address: string | null;
+  /** Normalized address. Cities file one permit per trade (building, electrical, plumbing) for
+   * the same pool; leads and city counts treat permits sharing a key as one project. */
+  project_key: string | null;
   zip: string | null;
   lat: number | null;
   lng: number | null;

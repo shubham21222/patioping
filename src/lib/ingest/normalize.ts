@@ -45,6 +45,12 @@ export function toDate(v: unknown): string | null {
 
 export const toZip = (v: unknown) => str(v)?.match(/\b(\d{5})(?:-\d{4})?\b/)?.[1] ?? null;
 
+/** "1234 W. Main St.  Unit B" → "1234 w main st unit b": same project, however the permit spelled it. */
+export const projectKey = (address: string | null) => {
+  const k = address?.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  return k && /\d/.test(k) ? k : null; // no house number: too vague to group on
+};
+
 /** Pick the single category a permit becomes; pool beats spa beats fence beats outdoor. */
 export function categoryFor(text: string): PermitCategory {
   const hits = classifyByKeywords(text);
@@ -59,6 +65,7 @@ export function normalize(j: Jurisdiction, rec: RawRecord): NormalizedPermit | n
 
   const permit_type = str(pick(rec, m.permit_type));
   const description = str(pick(rec, m.description));
+  const address = str(pick(rec, m.address));
   const lat = toNumber(pick(rec, m.lat) ?? rec.__y);
   const lng = toNumber(pick(rec, m.lng) ?? rec.__x);
   const url =
@@ -72,7 +79,8 @@ export function normalize(j: Jurisdiction, rec: RawRecord): NormalizedPermit | n
     description: description?.slice(0, 2000) ?? null,
     category: categoryFor(`${permit_type ?? ""} ${description ?? ""}`),
     valuation: toNumber(pick(rec, m.valuation)),
-    address: str(pick(rec, m.address)),
+    address,
+    project_key: projectKey(address),
     zip: toZip(pick(rec, m.zip)) ?? toZip(pick(rec, m.address)),
     lat: lat && Math.abs(lat) <= 90 ? lat : null,
     lng: lng && Math.abs(lng) <= 180 ? lng : null,

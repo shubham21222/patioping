@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { asJurisdiction, sourceByKey } from "../src/lib/ingest/configs";
-import { categoryFor, normalize, toDate, toZip, weeklyCounts } from "../src/lib/ingest/normalize";
+import { categoryFor, normalize, projectKey, toDate, toZip, weeklyCounts } from "../src/lib/ingest/normalize";
 import { fetchArcgis, fetchSocrata } from "../src/lib/ingest/sources";
 import type { Jurisdiction } from "../src/lib/ingest/types";
 
@@ -51,6 +51,14 @@ test("classification picks the right single category", () => {
   assert.equal(categoryFor("Hot tub install on existing slab"), "spa");
   assert.equal(categoryFor("Interior remodel, kitchen and bath"), "other");
   assert.equal(categoryFor("Parking deck structural repair"), "other");
+});
+
+test("project key groups a job's permits by address", () => {
+  assert.equal(projectKey("6307 WEST COURTYARD DR"), "6307 west courtyard dr");
+  assert.equal(projectKey("6307  West Courtyard Dr."), projectKey("6307 WEST COURTYARD DR"));
+  assert.equal(projectKey("1234 W. Main St, Unit B"), "1234 w main st unit b");
+  assert.equal(projectKey("MAIN ST"), null); // no house number: too vague
+  assert.equal(projectKey(null), null);
 });
 
 // Each case below is (lightly trimmed) text from a real Austin, Orlando or Mesa permit.
