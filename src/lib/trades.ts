@@ -20,10 +20,12 @@ export type LiveTrade = {
   wonValue: "monthly" | "job";
   /** Permit categories this trade receives as leads */
   categories: PermitCategory[];
-  /** Classifier pass 1: lowercase substrings matched against permit type + description */
+  /** Classifier pass 1: lowercase whole words or phrases (plural/-ed/-ing forms also match) */
   keywords: string[];
-  /** Substrings that veto a keyword hit (e.g. "pool" in "carpool") */
+  /** Phrases blanked out before matching (e.g. "parking deck" is not a deck job) */
   exclude?: string[];
+  /** The keyword is incidental: the permit is really for something else, so this trade gets no lead */
+  veto?: RegExp[];
   pitch: { headline: string; body: string; why: string };
   examples: { work: string; value: number; builder: string }[];
 };
@@ -46,7 +48,14 @@ export const LIVE_TRADES: LiveTrade[] = [
     wonValue: "monthly",
     categories: ["pool", "spa"],
     keywords: ["pool", "spa", "swimming", "gunite", "shotcrete", "hot tub", "plaster pool"],
-    exclude: ["carpool", "spanish", "spacing", "space"],
+    exclude: ["day spa", "med spa", "spa building", "spa salon"],
+    // Pool demolitions and fill-ins are the end of a pool, not a new one to service.
+    // ("Rebuilding demolished pool [Demolition permit #…]" is a new pool, so no bare "demolition".)
+    veto: [
+      /\btotal demo\b/,
+      /\bpool (removal|demo(lition)?)\b/,
+      /\b(demo(lition)? of|remove|removal of|fill(ing)? in|demolish(ing)?)( the| an?| existing)* (in-?ground |swimming )?pool\b/,
+    ],
     pitch: {
       headline: "Every new pool in your zip codes, the morning it’s permitted.",
       body: "By the time a pool is permitted, the homeowner has picked a builder. They haven’t picked who cleans it. That’s years of weekly service, and you hear about it the morning after the permit is issued.",
@@ -68,6 +77,8 @@ export const LIVE_TRADES: LiveTrade[] = [
     wonValue: "job",
     categories: ["fence"],
     keywords: ["fence", "fencing", "privacy wall", "masonry wall", "screen wall", "garden wall"],
+    // Site-protection fences put up during construction are not a homeowner's fence job.
+    exclude: ["temporary protective fence", "temporary fence", "tree protection fence", "construction fence", "silt fence"],
         pitch: {
       headline: "New fence permits in your area, every morning.",
       body: "A fence permit means a homeowner is ready to spend, and many local codes require a barrier around new pools. See the address and job value, plus the builder where the city publishes it, while the job is still fresh.",
@@ -89,7 +100,23 @@ export const LIVE_TRADES: LiveTrade[] = [
     wonValue: "job",
     categories: ["landscaping"],
     keywords: ["patio", "deck", "pergola", "retaining wall", "outdoor kitchen", "gazebo", "arbor", "pavers", "hardscape"],
-    exclude: ["parking deck", "roof deck"],
+    exclude: ["parking deck", "roof deck", "roof decking", "past decking"],
+    // New homes and whole-house remodels list "covered patio" as one feature among many; the
+    // builder already does that work. A patio, deck or pergola permit on its own is the lead.
+    veto: [
+      /\b\d+\s*-?\s*(bed(room)?s?|br|bath(room)?s?|ba)\b/,
+      /\bbed(room)?s?\b.*\bbath(room)?s?\b/,
+      /\b(new|construct(ion)?( of)?)( an?)?( \d+(-| )story)? (single[- ]family|sfr|sf res|dwelling|duplex|townhome|condo|home|residence)/,
+      /\bsingle[- ]family residential new home\b/,
+      /\bnew home construction\b/,
+      /\b(full|whole)[- ]house (remodel|renovation)\b/,
+      /\binterior remodel\b/,
+      /\bre-?roof/,
+      /\bshingles?\b/, // roof decking
+      /\bfoundation repair\b/,
+      /\bwater heater\b/,
+      /\bdwelling units\b/,
+    ],
     pitch: {
       headline: "Patios, decks and pergolas, the morning they’re permitted.",
       body: "Hardscape permits are the start of a backyard job, not the end. Plantings, lighting, irrigation and upkeep all come after. Reach the homeowner while the project is still fresh.",
@@ -115,15 +142,25 @@ export const isSoonTrade = (v: unknown): v is SoonTradeId => SOON_TRADES.some((t
 export const tradeBySlug = (slug: string) => LIVE_TRADES.find((t) => t.slug === slug);
 export const tradeById = (id: string) => LIVE_TRADES.find((t) => t.id === id);
 
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+// Whole words only, so "arbor" doesn't match "Harbor Dr" and "spa" doesn't match "spacious".
+const keywordRe = new Map<string, RegExp>();
+const wordMatch = (text: string, k: string) => {
+  let re = keywordRe.get(k);
+  if (!re) keywordRe.set(k, (re = new RegExp(`\\b${escapeRe(k)}(s|es|ed|ing)?\\b`)));
+  return re.test(text);
+};
+
 /** Classifier pass 1. Returns matched categories; empty means "ask Haiku" or drop. */
 export function classifyByKeywords(text: string): PermitCategory[] {
-  const t = text.toLowerCase();
+  const t = text.toLowerCase().replace(/\s+/g, " ");
   const hits = new Set<PermitCategory>();
   for (const trade of LIVE_TRADES) {
-    // Blank out excluded phrases ("carpool", "parking deck") before matching keywords.
+    // Blank out excluded phrases ("parking deck") before matching keywords.
     const clean = (trade.exclude ?? []).reduce((acc, x) => acc.split(x).join(" "), t);
-    const matched = trade.keywords.filter((k) => clean.includes(k));
+    const matched = trade.keywords.filter((k) => wordMatch(clean, k));
     if (!matched.length) continue;
+    if (trade.veto?.some((re) => re.test(clean))) continue;
     if (trade.id === "pool_service") {
       const poolWords = matched.some((k) => k !== "spa" && k !== "hot tub");
       if (poolWords) hits.add("pool");

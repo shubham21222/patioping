@@ -5,13 +5,14 @@
  *   npm run ingest -- dry-run austin --days 90   weekly pool/fence/outdoor counts (no DB) → Phase 0 go/no-go
  *   npm run ingest -- sync-config                write src/lib/ingest/configs.ts into the jurisdictions table
  *   npm run ingest -- run [austin] [--days 7]    fetch, store, match leads (needs SUPABASE_SERVICE_ROLE_KEY)
+ *   npm run ingest -- reclassify [--apply]       re-run the classifier over stored permits (dry run without --apply)
  *
  * Reads .env.local if present. SOCRATA_APP_TOKEN is optional but avoids throttling.
  * APIFY_TOKEN is needed for Apify sources.
  */
 import { createClient } from "@supabase/supabase-js";
 import { asJurisdiction, sourceByKey, SOURCES } from "../src/lib/ingest/configs";
-import { normalize, weeklyCounts } from "../src/lib/ingest/normalize";
+import { categoryFor, normalize, weeklyCounts } from "../src/lib/ingest/normalize";
 import { runAll, runSource } from "../src/lib/ingest/run";
 import { discover, fetchSource } from "../src/lib/ingest/sources";
 import type { Jurisdiction } from "../src/lib/ingest/types";
@@ -117,6 +118,47 @@ async function main() {
         console.log(`${s.name}: ${error ? `error ${error.message}` : existing ? `updated (status ${existing.status})` : "inserted (paused)"}`);
       }
       console.log("\nTurn a verified source on in SQL: update jurisdictions set status = 'active' where name = 'Austin';");
+      break;
+    }
+
+    case "reclassify": {
+      // After a classifier change: stored permits keep their old category until re-checked.
+      // Permits that no longer qualify become "other" (not deleted: leads may point at them),
+      // which match_leads and the city pages already ignore.
+      const client = db();
+      const apply = rest.includes("--apply");
+      const rows: { id: string; category: string; permit_type: string | null; description: string | null }[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await client
+          .from("permits")
+          .select("id, category, permit_type, description")
+          .order("id")
+          .range(from, from + 999);
+        if (error) throw new Error(`load permits: ${error.message}`);
+        rows.push(...(data ?? []));
+        if (!data || data.length < 1000) break;
+      }
+      const changes = new Map<string, string[]>();
+      for (const r of rows) {
+        const next = categoryFor(`${r.permit_type ?? ""} ${r.description ?? ""}`);
+        if (next === r.category) continue;
+        const key = `${r.category} → ${next}`;
+        changes.set(key, [...(changes.get(key) ?? []), r.id]);
+      }
+      console.log(`${rows.length} permits checked.`);
+      console.table(Object.fromEntries([...changes].map(([k, ids]) => [k, ids.length])));
+      if (!apply) {
+        console.log("Dry run. Re-run with --apply to write these changes.");
+        break;
+      }
+      for (const [key, ids] of changes) {
+        const next = key.split(" → ")[1];
+        for (let i = 0; i < ids.length; i += 200) {
+          const { error } = await client.from("permits").update({ category: next }).in("id", ids.slice(i, i + 200));
+          if (error) throw new Error(`update ${key}: ${error.message}`);
+        }
+      }
+      console.log("Applied.");
       break;
     }
 

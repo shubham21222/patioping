@@ -53,6 +53,49 @@ test("classification picks the right single category", () => {
   assert.equal(categoryFor("Parking deck structural repair"), "other");
 });
 
+// Each case below is (lightly trimmed) text from a real Austin, Orlando or Mesa permit.
+test("classification: whole words only", () => {
+  assert.equal(categoryFor("Building Permit · Roof 7299 CHELSEA HARBOR DR REROOF"), "other");
+  assert.equal(categoryFor("Interior remodel, spacious open-plan kitchen"), "other");
+  assert.equal(categoryFor("New pools and spas for the HOA amenity center"), "pool");
+  assert.equal(categoryFor("Pool deck pavers and new decking"), "pool");
+});
+
+test("classification: a patio on a new home or whole-house remodel is not an outdoor lead", () => {
+  for (const text of [
+    "Building Permit · New SINGLE FAMILY RESIDENTIAL NEW HOME CONSTRUCTION. 2-STORY 4 BEDROOM WITH 2.5 BATHROOMS WITH 2 CAR GARAGE AND COVERED PATIO",
+    "Plumbing Permit · New New 1-story single-family dwelling with 3 bedrooms and 2 baths 2 car garage rear patio and front porch",
+    "Mechanical Permit · New New 3-story 3 bedroom 2.5 bathroom duplex condo residence with covered front porch and rear covered patio.",
+    "Plumbing Permit · New PB: New construction of 3 story SFR attached garage covered patio 2nd floor balcony 3 beds 3.5 baths",
+    "Building Permit · New New two story SFR with 5b/3bath attached garage covered front porch and covered patio",
+  ]) assert.equal(categoryFor(text), "other", text);
+
+  assert.equal(categoryFor("Electrical Permit · Addition and Remodel Covered patio addition"), "landscaping");
+  assert.equal(categoryFor("Building Permit · Addition and Remodel Retroactively permit attached covered patio"), "landscaping");
+  assert.equal(categoryFor("Engineering · Other RAMPERAUD DECK"), "landscaping");
+  assert.equal(categoryFor("Patio cover for existing single family residence"), "landscaping");
+});
+
+test("classification: a pool on a new home is still a pool lead", () => {
+  assert.equal(categoryFor("Building Permit · New New inground swimming pool and spa for existing 1-story single family residence"), "pool");
+  assert.equal(categoryFor("New construction single-family residence 4 bedroom with pool and spa"), "pool");
+});
+
+test("classification: pool demolitions and site-protection fences are dropped", () => {
+  assert.equal(categoryFor("Building Permit · Demolition Total demo of SFR 1350 sq ft circa 1953 and pool 1250 sq ft circa 2011"), "other");
+  assert.equal(categoryFor("Residential Permit · Pool fill in the existing swimming pool"), "other");
+  assert.equal(categoryFor("Electrical Permit · New New autofill inground pool; demo of existing wood deck stairs"), "pool");
+  assert.equal(categoryFor("Building Permit · Pool 1225 YATES POOL DEMO"), "other");
+  assert.equal(categoryFor("Electrical Permit · New Rebuilding demolished pool that was failing due to ARS [Demolition permit #2025-144801]."), "pool");
+  assert.equal(categoryFor("Building Permit · Repair Express: Re-roof (not going past decking)"), "other");
+  assert.equal(categoryFor("Building Permit · Repair Express: Remove and replace roof shingles as well as approximately 400 sq ft of decking"), "other");
+  assert.equal(categoryFor("Building Permit · Repair Express: Foundation repair - Installing 13 Steel Piers 1 DECK Breakouts"), "other");
+  assert.equal(categoryFor("Residential Permit · Additions Install a 224 SF detached pergola per structural engineering."), "landscaping");
+  assert.equal(categoryFor("Building Permit · Addition and Remodel Full house remodel and deck build in back new bathrooms new kitchen"), "other");
+  assert.equal(categoryFor("Residential Permit · Non-Structural This permit is for installation of the temporary protective fence only."), "other");
+  assert.equal(categoryFor("Building Permit · Fence ALUMINUM FENCE"), "fence");
+});
+
 test("date and zip parsing", () => {
   assert.equal(toDate(Date.UTC(2026, 10, 3)), "2026-11-03");
   assert.equal(toDate("11/3/2026"), "2026-11-03");
