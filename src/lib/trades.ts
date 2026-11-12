@@ -55,6 +55,8 @@ export const LIVE_TRADES: LiveTrade[] = [
       /\btotal demo\b/,
       /\bpool (removal|demo(lition)?)\b/,
       /\b(demo(lition)? of|remove|removal of|fill(ing)? in|demolish(ing)?)( the| an?| existing)* (in-?ground |swimming )?pool\b/,
+      // San Diego County: "DEMOLITION PERMIT FOR 400 SQFT …" (not "[Demolition permit #…]" on a rebuild)
+      /\bdemolition permit for\b/,
     ],
     pitch: {
       headline: "Every new pool in your zip codes, the morning it’s permitted.",
@@ -78,8 +80,13 @@ export const LIVE_TRADES: LiveTrade[] = [
     categories: ["fence"],
     keywords: ["fence", "fencing", "privacy wall", "masonry wall", "screen wall", "garden wall"],
     // Site-protection fences put up during construction are not a homeowner's fence job.
-    exclude: ["temporary protective fence", "temporary fence", "tree protection fence", "construction fence", "silt fence"],
-        pitch: {
+    exclude: [
+      "temporary protective fence", "temporary fence", "tree protection fence", "construction fence", "silt fence",
+      "pedestrian protection fence", "protection fence",
+    ],
+    // A new house "with fences" is the home builder's job, not a fence lead.
+    veto: [/\bnew (two-family |single-family |residential )?dwelling\b/, /\bnew build\b/],
+    pitch: {
       headline: "New fence permits in your area, every morning.",
       body: "A fence permit means a homeowner is ready to spend, and many local codes require a barrier around new pools. See the address and job value, plus the builder where the city publishes it, while the job is still fresh.",
       why: "Fence permits are filed for the bigger jobs: tall privacy fences, masonry walls and pool barriers.",
@@ -100,7 +107,11 @@ export const LIVE_TRADES: LiveTrade[] = [
     wonValue: "job",
     categories: ["landscaping"],
     keywords: ["patio", "deck", "pergola", "retaining wall", "outdoor kitchen", "gazebo", "arbor", "pavers", "hardscape"],
-    exclude: ["parking deck", "roof deck", "roof decking", "past decking"],
+    exclude: [
+      "parking deck", "roof deck", "roof decking", "past decking", "no decking",
+      // San Diego County's catch-all scope label, attached to window and drywall jobs too
+      "antennas, tennis cts, gazebo",
+    ],
     // New homes and whole-house remodels list "covered patio" as one feature among many; the
     // builder already does that work. A patio, deck or pergola permit on its own is the lead.
     veto: [
@@ -111,7 +122,10 @@ export const LIVE_TRADES: LiveTrade[] = [
       /\bnew home construction\b/,
       /\b(full|whole)[- ]house (remodel|renovation)\b/,
       /\binterior remodel\b/,
-      /\bre-?roof/,
+      /\bre[-:]?\s*roof/,
+      /\bnew primary residential\b/,
+      // Damage repairs: the patio or deck is just where the damage is
+      /\b(damaged framing|termite|dry rot|water damage|fire damage|fire rebuild|re-?stucco|leak)\b/,
       /\bshingles?\b/, // roof decking
       /\bfoundation repair\b/,
       /\bwater heater\b/,

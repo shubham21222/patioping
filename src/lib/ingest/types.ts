@@ -19,10 +19,17 @@ export type FieldMapping = {
   lng?: FieldPath;
   contractor_name?: FieldPath;
   source_url?: FieldPath;
+  /** City of each record, for the zip geocoder when the source has no zip (county-wide sources) */
+  geocode_city?: FieldPath;
   /** Query settings, not columns */
   _query: {
     /** Column used for incremental pulls ("issued since") */
     date_field: string;
+    /**
+     * Socrata only: the date column is text in this format, so it can't be compared with >=.
+     * The connector asks for each day in the window by its exact text instead (Dallas).
+     */
+    date_text?: "MM/DD/YY";
     /** Extra server-side filter, e.g. SoQL "permit_class_mapped = 'Residential'" or ArcGIS SQL */
     where?: string;
     /** Template when the source has no URL column: {permit_number} is substituted */

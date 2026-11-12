@@ -30,14 +30,20 @@ export async function lookupZip(oneLine: string, fetchImpl: typeof fetch = fetch
 export async function enrichZips(
   permits: NormalizedPermit[],
   place: { city: string; state: string },
-  opts: { concurrency?: number; fetchImpl?: typeof fetch } = {},
+  opts: {
+    concurrency?: number;
+    fetchImpl?: typeof fetch;
+    /** The record's own city (county-wide sources); falls back to `place.city` */
+    cityOf?: (p: NormalizedPermit) => string | null;
+  } = {},
 ): Promise<number> {
   const todo = permits.filter((p) => !p.zip && p.address);
   let filled = 0;
   const queue = [...todo];
   const worker = async () => {
     for (let p = queue.shift(); p; p = queue.shift()) {
-      const zip = await lookupZip(`${p.address}, ${place.city}, ${place.state}`, opts.fetchImpl);
+      const city = opts.cityOf?.(p) || place.city;
+      const zip = await lookupZip(`${p.address}, ${city}, ${place.state}`, opts.fetchImpl);
       if (zip) {
         p.zip = zip;
         filled++;

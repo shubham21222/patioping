@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { enrichZips } from "./enrich";
-import { normalize, redactRaw } from "./normalize";
+import { normalize, pick, redactRaw } from "./normalize";
 import { fetchSource } from "./sources";
 import type { Jurisdiction, NormalizedPermit } from "./types";
 
@@ -37,20 +37,24 @@ export async function runSource(
 
     // Keyed by permit number: some portals publish one row per sub-permit or revision, and a
     // single upsert can't touch the same (jurisdiction, permit_number) row twice. Last one wins.
-    const byNumber = new Map<string, { n: NormalizedPermit; raw: Record<string, unknown> }>();
+    const byNumber = new Map<string, { n: NormalizedPermit; raw: Record<string, unknown>; city: string | null }>();
     for (const r of raw) {
       const n = normalize(j, r);
       if (!n || n.category === "other") continue;
-      byNumber.set(n.permit_number, { n, raw: redactRaw(r) });
+      const city = j.field_mapping.geocode_city ? String(pick(r, j.field_mapping.geocode_city) ?? "").trim() || null : null;
+      byNumber.set(n.permit_number, { n, raw: redactRaw(r), city });
     }
     const keep = [...byNumber.values()];
     for (const { n } of keep) result.byCategory[n.category] = (result.byCategory[n.category] ?? 0) + 1;
     result.kept = keep.length;
 
-    // Sources without a zip column (Mesa, Orlando): leads match on zip, so fill them in.
+    // Sources without a zip column (Mesa, Orlando, Miami-Dade): leads match on zip, so fill them in.
+    // County-wide sources give each record's own city; city sources use the jurisdiction name.
+    const cityOf = new Map(keep.map((k) => [k.n, k.city]));
     result.zipsFilled = await enrichZips(
       keep.map((k) => k.n),
       { city: j.name, state: j.state },
+      { cityOf: (p) => cityOf.get(p) ?? null },
     );
 
     for (let i = 0; i < keep.length; i += 500) {

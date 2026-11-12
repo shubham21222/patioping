@@ -22,18 +22,33 @@ async function getJson(url: string, opts: FetchOptions, headers: Record<string, 
  * Socrata SODA 2.x: GET {domain}/resource/{id}.json with SoQL.
  * Pages with $limit/$offset ordered by the date field, then :id for a stable order.
  */
+/** Every day from `since` through today (UTC) as MM/DD/YY: "11/04/26". */
+export function textDays(since: string, now = new Date()): string[] {
+  const out: string[] = [];
+  const end = now.toISOString().slice(0, 10);
+  for (let d = new Date(`${since}T00:00:00Z`); d.toISOString().slice(0, 10) <= end; d.setUTCDate(d.getUTCDate() + 1)) {
+    const iso = d.toISOString();
+    out.push(`${iso.slice(5, 7)}/${iso.slice(8, 10)}/${iso.slice(2, 4)}`);
+  }
+  return out;
+}
+
 export async function fetchSocrata(j: Jurisdiction, opts: FetchOptions): Promise<RawRecord[]> {
   if (!j.dataset_id) throw new Error(`${j.name}: Socrata source needs dataset_id`);
-  const { date_field, where } = j.field_mapping._query;
+  const { date_field, where, date_text } = j.field_mapping._query;
   const page = 5000;
   const max = opts.maxRecords ?? 50_000;
-  const clauses = [`${date_field} >= '${opts.since}T00:00:00'`, where].filter(Boolean).join(" AND ");
+  // A text date column can't be compared, so ask for each day by its exact text.
+  const window = date_text
+    ? `${date_field} in (${textDays(opts.since).map((d) => `'${d}'`).join(", ")})`
+    : `${date_field} >= '${opts.since}T00:00:00'`;
+  const clauses = [window, where].filter(Boolean).join(" AND ");
   const out: RawRecord[] = [];
 
   for (let offset = 0; offset < max; offset += page) {
     const qs = new URLSearchParams({
       $where: clauses,
-      $order: `${date_field} ASC, :id`,
+      $order: date_text ? ":id" : `${date_field} ASC, :id`,
       $limit: String(Math.min(page, max - offset)),
       $offset: String(offset),
     });

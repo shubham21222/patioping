@@ -5,8 +5,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { asJurisdiction, sourceByKey } from "../src/lib/ingest/configs";
-import { categoryFor, normalize, projectKey, toDate, toZip, weeklyCounts } from "../src/lib/ingest/normalize";
-import { fetchArcgis, fetchSocrata } from "../src/lib/ingest/sources";
+import { categoryFor, normalize, projectKey, redactRaw, toDate, toZip, weeklyCounts } from "../src/lib/ingest/normalize";
+import { fetchArcgis, fetchSocrata, textDays } from "../src/lib/ingest/sources";
+import { enrichZips } from "../src/lib/ingest/enrich";
 import type { Jurisdiction } from "../src/lib/ingest/types";
 
 const austin = asJurisdiction(sourceByKey("austin")!);
@@ -316,4 +317,67 @@ test("city pages: one per city, unconfigured Apify stand-ins add nothing", async
   assert.equal(new Set(slugs).size, slugs.length);
   assert.ok(slugs.includes("austin-tx"));
   assert.equal(CITIES.find((c) => c.slug === "austin-tx")!.source.source_type, "socrata");
+});
+
+// ── Sources added Nov 12 2026 ───────────────────────────────────────────────
+
+test("text dates: two-digit years and the per-day window (Dallas)", () => {
+  assert.equal(toDate("11/04/26"), "2026-11-04");
+  assert.equal(toDate("1/5/2026"), "2026-01-05");
+  assert.deepEqual(textDays("2026-10-30", new Date("2026-11-02T12:00:00Z")), ["10/30/26", "10/31/26", "11/01/26", "11/02/26"]);
+});
+
+test("Socrata text-date source asks for each day by name", async () => {
+  const urls: string[] = [];
+  const fetchImpl = (async (u: string) => (urls.push(decodeURIComponent(u.replace(/\+/g, " "))), new Response("[]"))) as typeof fetch;
+  await fetchSocrata(asJurisdiction(sourceByKey("dallas")!), { since: new Date(Date.now() - 864e5).toISOString().slice(0, 10), fetchImpl });
+  assert.match(urls[0], /issued_date in \('\d\d\/\d\d\/\d\d', '\d\d\/\d\d\/\d\d'\) AND permit_type like 'Residential%'/);
+  assert.match(urls[0], /\$order=:id/);
+});
+
+test("zip geocoding uses each record's own city when the source gives one (Miami-Dade)", async () => {
+  const asked: string[] = [];
+  const fetchImpl = (async (u: string) => {
+    asked.push(new URL(u).searchParams.get("address")!);
+    return Response.json({ result: { addressMatches: [{ addressComponents: { zip: "33175" } }] } });
+  }) as typeof fetch;
+  const p = normalize(asJurisdiction(sourceByKey("miami-dade")!), { PermitNumber: "1", PropertyAddress: "14045 SW 30 ST", DetailDescriptionComments: "NEW POOL", City: "MIAMI" })!;
+  const filled = await enrichZips([p], { city: "Miami-Dade County", state: "FL" }, { fetchImpl, cityOf: () => "MIAMI" });
+  assert.equal(filled, 1);
+  assert.equal(p.zip, "33175");
+  assert.deepEqual(asked, ["14045 SW 30 ST, MIAMI, FL"]);
+});
+
+test("classification on the new sources' wording", () => {
+  // San Diego County scope label is not a gazebo job
+  assert.equal(categoryFor("Residential Alteration-Addn · 3310 - RES - Misc. (Antennas, Tennis Cts, Gazebo) Description of Work: 206 SQFT WINDOW AND SLIDING GLASS"), "other");
+  assert.equal(categoryFor("New Primary Residential SFD-MH · 1010 - RES - New Primary Residential Structure Foundation: SLAB covered patio"), "other");
+  assert.equal(categoryFor("Residential Alteration-Addn · 3291 - ACC - Decks (All) Description of Work: 532 SQFT ATTACHED DECK FOR EXISTING SFD"), "landscaping");
+  assert.equal(categoryFor("New Residential Acc Structure · 3293 - RES - Pool/Spa For SFD Or Duplex 713 SQFT POOL AND SPA"), "pool");
+  assert.equal(categoryFor("Residential Alteration-Addn · 6490 - ACC - Demolition All Other Buildings DEMOLITION PERMIT FOR 400 SQFT POOL"), "other");
+  // Los Angeles / Dallas damage repairs and roofs
+  assert.equal(categoryFor("Bldg-Alter/Repair · Dwelling - Single Family Re-stucco. Replacement of damaged framing members at rear patio"), "other");
+  assert.equal(categoryFor("Residential Alteration Addition Permit NSFAA Repair of fire damage to existing single-family residence, rear deck"), "other");
+  assert.equal(categoryFor("Residential Roofing Permit Re: Roof, no decking"), "other");
+  assert.equal(categoryFor("Bldg-Demolition · Demolition DEMOLISH SINGLE-FAMILY DWELLING. PEDESTRIAN PROTECTION FENCE REQUIRED."), "other");
+  assert.equal(categoryFor("Residential Accessory Structure Permit NSFAA attached patio cover(160 SF) and attached pergola (455 SF)"), "landscaping");
+  // Raleigh new homes "with fences"
+  assert.equal(categoryFor("Building · New Residential Dwelling New two-family dwelling, Units 17 & 18, with fences"), "other");
+  assert.equal(categoryFor("BLDG · FENCE NOMASONRY 6'PICKET FENCE&GATE"), "fence");
+  // Miami-Dade / LA pool wording
+  assert.equal(categoryFor("PLUM · ADDITION - DETACHED POOL/SPA/PAVES-PLUM"), "pool");
+  assert.equal(categoryFor("Swimming-Pool/Spa · Pool/Spa - Private ePlan. REMOVE (E) POOL AND PROPOSED NEW POOL PER L.A. CITY STANDARD PLAN"), "pool");
+});
+
+test("appraisal-district 'issued to' and party names are redacted from raw payloads", () => {
+  const r = redactRaw({ permitnum: "1", permitissuedto: "JANE DOE", partyname: "JOHN DOE", propownername: "X", permitcomments: "POOL" });
+  assert.deepEqual(Object.keys(r).sort(), ["permitcomments", "permitnum"]);
+});
+
+test("a house number is not a zip", () => {
+  const orlando = asJurisdiction(sourceByKey("orlando")!);
+  const p = (address: string) => normalize(orlando, { permit_number: "X", permit_address: address, project_name: "POOL" })!.zip;
+  assert.equal(p("14830 FELLS LN"), null);
+  assert.equal(p("14830 FELLS LN ORLANDO FL 32827"), "32827");
+  assert.equal(p("7299 CHELSEA HARBOR DR, ORLANDO, FL 32829-1234"), "32829");
 });

@@ -10,7 +10,7 @@ function at(rec: RawRecord, path: string): unknown {
   return cur;
 }
 
-function pick(rec: RawRecord, path: FieldPath | undefined): unknown {
+export function pick(rec: RawRecord, path: FieldPath | undefined): unknown {
   if (!path) return undefined;
   if (Array.isArray(path)) {
     const parts = path.map((p) => at(rec, p)).filter((v) => v != null && String(v).trim() !== "");
@@ -37,13 +37,26 @@ export function toDate(v: unknown): string | null {
   if (typeof v === "number") return new Date(v).toISOString().slice(0, 10);
   const s = String(v).trim();
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-  const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if (us) return `${us[3]}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}`;
+  const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4}|\d{2})\b/);
+  // Two-digit years are this century: permits from 1926 aren't in any feed we read.
+  if (us) return `${us[3].length === 2 ? `20${us[3]}` : us[3]}-${us[1].padStart(2, "0")}-${us[2].padStart(2, "0")}`;
   const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
 }
 
 export const toZip = (v: unknown) => str(v)?.match(/\b(\d{5})(?:-\d{4})?\b/)?.[1] ?? null;
+
+/**
+ * A zip inside a full address: only at the end ("… ORLANDO FL 32827"). The first five-digit
+ * number in "14830 FELLS LN" is the house number, not a zip.
+ */
+export const zipInAddress = (v: unknown) => {
+  const s = str(v);
+  if (!s) return null;
+  const m = s.match(/(?:^|[\s,])(\d{5})(?:-\d{4})?\s*$/);
+  // A bare "12345" alone isn't an address with a zip either.
+  return m && s.trim().length > m[0].trim().length ? m[1] : null;
+};
 
 /** "1234 W. Main St.  Unit B" → "1234 w main st unit b": same project, however the permit spelled it. */
 export const projectKey = (address: string | null) => {
@@ -81,7 +94,7 @@ export function normalize(j: Jurisdiction, rec: RawRecord): NormalizedPermit | n
     valuation: toNumber(pick(rec, m.valuation)),
     address,
     project_key: projectKey(address),
-    zip: toZip(pick(rec, m.zip)) ?? toZip(pick(rec, m.address)),
+    zip: toZip(pick(rec, m.zip)) ?? zipInAddress(pick(rec, m.address)),
     lat: lat && Math.abs(lat) <= 90 ? lat : null,
     lng: lng && Math.abs(lng) <= 180 ? lng : null,
     contractor_name: str(pick(rec, m.contractor_name)),
@@ -110,7 +123,8 @@ export function weeklyCounts(permits: NormalizedPermit[]) {
  * Raw payloads are kept for re-checking, minus personal details some portals publish:
  * owner and applicant names, phones, emails. We never need them.
  */
-const PERSONAL = /owner|applicant|phone|email|e_mail|contact_name/i;
+// "issuedto" / "party": appraisal-district feeds name the person a permit was issued to.
+const PERSONAL = /owner|applicant|phone|email|e_mail|contact_name|issuedto|issued_to|party/i;
 export function redactRaw(rec: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(rec).filter(([k]) => !PERSONAL.test(k)));
 }

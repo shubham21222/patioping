@@ -9,7 +9,9 @@ export type City = {
   hasBuilder: boolean;
 };
 
-const STATE_NAME: Record<string, string> = { TX: "Texas", FL: "Florida", AZ: "Arizona", CA: "California", TN: "Tennessee" };
+const STATE_NAME: Record<string, string> = {
+  TX: "Texas", FL: "Florida", AZ: "Arizona", CA: "California", TN: "Tennessee", NC: "North Carolina", LA: "Louisiana",
+};
 
 const configured = (s: SourceConfig) =>
   s.source_type === "apify" ? !!(s.field_mapping._query.apify?.task || s.field_mapping._query.apify?.actor) : !!s.endpoint;
